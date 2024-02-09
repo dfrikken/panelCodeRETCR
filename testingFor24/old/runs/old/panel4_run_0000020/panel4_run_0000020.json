@@ -1,0 +1,12 @@
+{
+    "subruntime": 60, 
+    "runtime": 3600, 
+    "uid": "210015 48535005 20353041", 
+    "temperature": 264.4023, 
+    "voltage": 2455, 
+    "threshold": 1560, 
+    "subruns": 60, 
+    "date": "2023-06-16", 
+    "time": "09:06:49:909086", 
+    "udaq_time": "0 113894 235589"
+}

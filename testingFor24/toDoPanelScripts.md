@@ -7,6 +7,8 @@ Edits to panel python scripts:
         - some way to correct gain on the fly?
     5. change /dev/ttyUSB* to device ID 
     6. 
+
+    #check hang up on reading (probably need a catch on serial.readline)
     
 
 

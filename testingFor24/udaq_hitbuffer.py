@@ -14,7 +14,7 @@ from cobs import cobs
 #PORT = '/dev/ttyUSB0'
 
 # subrun duration in seconds
-subruntime = 30
+subruntime = 3
 
 
 def main():
@@ -144,7 +144,7 @@ def main():
     cmdLoop('set_cputrig_10mhz_enable 1',ser) #testing on
     cmdLoop('set_cputrig_enable 1',ser) #testing on
     
-    cmdLoop('trigout_width 5',ser)
+    #cmdLoop('trigout_width 5',ser)
     cmdLoop('trigout_mode 2',ser) # 2 = trigger formed during buffer readout
     cmdLoop('set_livetime_enable 1', ser)
     print(time.time_ns())

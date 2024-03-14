@@ -14,7 +14,7 @@ from cobs import cobs
 #PORT = '/dev/ttyUSB0'
 
 # subrun duration in seconds
-subruntime = 3
+subruntime = 20
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
                     help='data acquisition time in seconds (default is 10 seconds)')
     ap.add_argument('-v', '--voltage', dest='voltage', type=int, default=2600,
                     help='voltage setting in daq units (default is 2650)')
-    ap.add_argument('-d', '--disc', dest='disc', type=int, default=1510,
+    ap.add_argument('-d', '--disc', dest='disc', type=int, default=1710,
                     help='discriminator setting in daq units (default is 1390)')
     ap.add_argument('-p','--port',dest="PORT",type=int,default=0)
     args = ap.parse_args()
@@ -36,7 +36,7 @@ def main():
     runInfo['runtime'] = args.runtime
     
     # voltage sanity check
-    if args.voltage > 2800:
+    if args.voltage > 2900:
         print('ERROR: voltage setting should never need to be >2800')
         sys.exit()
         
@@ -46,7 +46,7 @@ def main():
     except:
         print("ERROR: is the USB cable connected?")
         sys.exit()
-    
+    ser.timeout = 1
     ser.flushInput()
     ser.flushOutput()
     
@@ -112,15 +112,14 @@ def main():
     
     #mydatetime = datetime.datetime.now()
     #pretime = time.clock_gettime_ns(time.CLOCK_REALTIME)
-    mytime2 = time.clock_gettime_ns(time.CLOCK_REALTIME)
-    print(mytime2)
+    #mytime2 = time.clock_gettime_ns(time.CLOCK_REALTIME)
+    #print(mytime2)
     
     #print(f'time to get python time = {time.clock_gettime_ns(time.CLOCK_REALTIME) - mytime}')
-    runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]
-    print(runInfo['udaq_time'])
-    mytime = time.clock_gettime_ns(time.CLOCK_REALTIME)
-    print(f'time to get udaq time = {mytime - mytime2}')
-    #mytime = time.clock_gettime_ns(time.CLOCK_REALTIME) #time.time_ns()
+    #runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]
+    #print(runInfo['udaq_time'])
+    #mytime = time.clock_gettime_ns(time.CLOCK_REALTIME)
+    #print(f'time to get udaq time = {mytime - mytime2}')
     
     
     mydatetime = datetime.datetime.now()
@@ -129,7 +128,7 @@ def main():
     #mytime = time.time_ns()#str(mydatetime.time().strftime("%H:%M:%S:%f"))
     
     runInfo['date'] = mydate
-    runInfo['time'] = mytime
+    #runInfo['time'] = mytime
     subruns = int(round(args.runtime/float(subruntime), 0))
     if subruns <= 0 : subruns = 1
     runInfo['subruns'] = subruns
@@ -140,16 +139,36 @@ def main():
     
     runInfo['runTimes'] = []
     runInfo['udaqTimeSubRuns'] = []
-    cmdLoop('cputrig_width 2',ser)
+    #cmdLoop('cputrig_width 5',ser)
     cmdLoop('set_cputrig_10mhz_enable 1',ser) #testing on
     cmdLoop('set_cputrig_enable 1',ser) #testing on
     
-    #cmdLoop('trigout_width 5',ser)
+    #cmdLoop('trigout_width 10',ser)
     cmdLoop('trigout_mode 2',ser) # 2 = trigger formed during buffer readout
     cmdLoop('set_livetime_enable 1', ser)
     print(time.time_ns())
     #runInfo['runTimes'].append("0 start " + str(time.time_ns()))
-    cmdLoop('run 1 0 0', ser, 5)
+    
+    runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]
+    
+    ########trigger scheduling testing
+
+    #udaqTime = cmdLoop('print_time', ser).split('\n')[0]
+    #microTime = udaqTime.split(" ")
+    #print(f'udaq time is {udaqTime}')
+    #print(f' edit time = {microTime[1]}')
+    #for i in range(1,4):
+        #cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {microTime[2]}',ser,5)
+        #cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+500}',ser,5)
+        #cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+100}',ser,5)
+    
+    
+    #cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+10} {microTime[2]}',ser,5)
+    
+    cmdLoop(f'run 1 3500 0', ser, 5)
+    #cmdLoop(f'run 1 0 {subruntime+10}', ser, 5)
+    mytime = time.time_ns() #time.clock_gettime_ns(time.CLOCK_REALTIME) #
+    runInfo['time'] = mytime
 
     out = None
     rundir, runfile = getNextRun(args.PORT)
@@ -190,7 +209,8 @@ def main():
         #hdump = cmdLoop('dump_hits_hex 4096', ser, ntry=5, decode=True)
         #print(hdump)
         # print out the trigger rate
-        #rate = getRate(ser)
+       #rate = getRate(ser)
+        #print('INFO: trigger rate  = {0} Hz'.format(rate))
         #print('INFO: trigger rate = {0} Hz'.format(rate))
        # if #rate > 0.0:
         #    runInfo['trigrate'] = rate
@@ -204,7 +224,8 @@ def main():
                 #runInfo['udaqTimeSubRuns'].append(f'{i+1} start  {udaqTimeValue}')
                 #cmdLoop('set_cputrig_enable 0',ser) #testing on
                 #cmdLoop('set_cputrig_10mhz_enable 0',ser) #testing on
-                cmdLoop('run 1 0 0', ser, 5)
+                #cmdLoop(f'run 1 0 {subruntime+10}', ser, 5)
+                cmdLoop(f'run 1 3500 0', ser, 5)
                 #print(time.time_ns())
                 #runInfo['runTimes'].append(f'{i+1} start {time.time_ns()}')
 
@@ -312,12 +333,15 @@ def cmdLoop(msg, serial, ntry=15, decode=True):
         #print(out)
         #print(type(out))
         if decode:
+            #print(out)
             if 'OK' in out:
                 #time.sleep(.01)
+                
                 return out
             else:
-                return out
-                print("here here")
+                #print("here here")
+                #return out
+                
                 #print(out)
                 serial.flushInput()
                 serial.flushOutput()
@@ -327,6 +351,7 @@ def cmdLoop(msg, serial, ntry=15, decode=True):
                 #print(out[-4:])
                 return out
             else:
+                print("looping")
                 serial.flushInput()
                 serial.flushOutput()
                 #time.sleep(0.05)
@@ -369,18 +394,34 @@ def collect_output(serial, decode=True):
         else:
             #print("past n = 0")
             if decode:
+                #line = serial.read
                 line = serial.readline()
+                if not line: 
+                    break
                 out += line.decode()
+                n = serial.inWaiting()
                 #print(line)
-                #print(out)
+                #if n ==0:
+                    #print(out)
+                if n!=0:
+                    line = serial.read(n)
+                    out += line.decode()
+                    #print('add',line)
+                    #print(out)
+
                 serial.flushInput()
                 serial.flushOutput()
+               
+                #print(out)
+                
+                break
 
                 break
                 #out += serial.readline().decode()
                 #print(out)
             else:
                 #time.sleep(0.05)
+                #print("here")
                 out.extend(serial.read(n))
                 #time.sleep(.05)
                 #print('out =', bytes(out))
@@ -415,6 +456,7 @@ def getNEvents(ser):
     
 def getRate(ser):
     stats = cmdLoop('get_run_statistics', ser).strip().split()
+    print(stats[1],stats[4])
     events = int(stats[1])
     duration = float(stats[4])
     trigrate = events / duration

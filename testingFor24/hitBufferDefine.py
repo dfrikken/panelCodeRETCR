@@ -11,7 +11,158 @@ import json
 from cobs import cobs
 import subprocess
 from subprocess import PIPE, Popen
+import numpy as np
 
+'''
+function list:
+
+testFunction
+    - just used to test importing working correctly
+resetUDaq
+    - resets the uDAQ parameters to make sure the script starts clean
+init
+    - initialize the adcs, voltage, threshold, hitbuff parameters, etc.
+scheduleTriggers
+    - schedule trigger pulses to latch timing with the GPIO monitor
+deadTimeAppend
+    - print the buffer readout deadtime beggining and end times to file
+makeJson
+    - handles the json file printing
+panelIDCheck
+    - checks which panel is in use 
+cmdline
+    - used to issue terminal commands within the python program
+closeSerial
+    - flushes serial and closes connection
+cmdLoop
+    - issue commands to uDAQ, returns output from uDAQ
+collect_output
+    - collects and decodes(if needed) serial output from uDAQ
+    - called in cmdLoop
+getNEvents
+    - print number of hits in the buffer
+getRate
+    - get trigger rate in Hz from buffer
+getNextRun
+    - read the output directory for index to name current file
+cobsDecode
+    - decode the buffer data from dump to print to .bin file
+
+'''
+
+
+
+
+
+
+def testFunction():
+    print('the definition file imported succesfully')
+    
+def resetUDaq():
+     # reset any previous settings on the udaq
+    commands = [
+        'stop_run',
+        'set_livetime_enable 0',
+        'reset_schedule',
+        'adc_reset_thresholds',
+    ]
+    
+    for msg in commands:
+        if cmdLoop(msg, ser, ntry=5) is None:
+            sys.exit()
+
+def init(args):
+    # initialize the adcs, set voltage, threshold, etc.
+    commands = [
+        'auxdac 1 {0}'.format(args.voltage),
+        'dac 1 {0}'.format(args.disc),
+        
+        'timestamp_mode 4',
+        'disc_opm 1',
+        
+        
+        'adc_timer_delay 0 18',
+        'adc_timer_delay 1 136',
+        'adc_timer_delay 2 18',
+        'adc_timer_delay 3 136',
+        'adc_timer_delay 4 18',
+        #'adc_timer_delay 4 136',
+        'adc_timer_delay 5 136',
+        'adc_timer_delay 6 136',
+        'adc_timer_delay 7 136',
+        
+        'adc_hist_enable 0',  # turn off ascii histograms
+        
+        'adc_recording_thresholds  0 0 0',  # high gain
+        'adc_recording_thresholds  2 0 0',  # med gain
+        'adc_recording_thresholds 12 0 0',  # low gain
+        
+        'adc_enable  0 1',  # high gain
+        'adc_enable  2 1',  # med gain
+        'adc_enable 12 1',  # low gain
+        
+    ]
+    
+    for msg in commands:
+        if cmdLoop(msg, ser) is None:
+            sys.exit()
+
+def scheduleTriggers():
+    apFake = argparse.ArgumentParser()
+    apFake.add_argument('-v', '--voltage', dest='voltage', type=int, default=0,
+                    help='voltage setting in daq units (default is 2650)')
+    apFake.add_argument('-d', '--disc', dest='disc', type=int, default=3900,
+                    help='discriminator setting in daq units (default is 1390)')
+    argsFake = apFake.parse_args()
+
+    print(argsFake)
+    '''
+    cmdLoop('set_livetime_enable 1', ser)
+    udaqTime = cmdLoop('print_time', ser).split('\n')[0]
+    microTime = udaqTime.split(" ")
+    print(f'udaq time is {udaqTime}')
+    print(f' edit time = {microTime[1]}')
+    for i in range(1,3):
+        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {microTime[2]}',ser,5)
+        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+100}',ser,5)
+        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+500}',ser,5)
+    
+    '''
+    
+def deadTimeAppend(beginTime, endTime,rundir):
+    f = open(f"{rundir}/bufferReadout.txt", "a")
+    f.write(f'{beginTime},{endTime}\n')
+    #print(f'sub run n at {beginTime}  {endTime}')
+    #print(f'buffer readout was {(endTime - beginTime)/1e9} seconds')
+
+def makeJson(subruntime, args, rundir, runfile):
+     # dictionary of run info to be json dumped later
+    runInfo = {}
+    runInfo['subruntime'] = subruntime
+    runInfo['runtime'] = args.runtime
+    # the uid and temperature
+    uid = cmdLoop('get_uid', ser).strip().split()
+    #print(f'uid is {uid}')
+    uid = ' '.join(uid[:3])
+    temp = float(cmdLoop('getmon', ser).strip().split()[1])
+    runInfo['uid'] = uid
+    runInfo['temperature'] = temp
+    runInfo['voltage'] = args.voltage
+    runInfo['threshold'] = args.disc
+    mydatetime = datetime.datetime.now()
+    mydate = str(mydatetime.date())
+    runInfo['date'] = mydate
+    subruns = int(round(args.runtime/float(subruntime), 0))
+    if subruns <= 0 : subruns = 1
+    runInfo['subruns'] = subruns
+    runInfo['runTimes'] = []
+    runInfo['udaqTimeSubRuns'] = []
+    runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]
+    mytime = time.time_ns() #time.clock_gettime_ns(time.CLOCK_REALTIME) #
+    runInfo['time'] = mytime
+
+    with open(os.path.join(rundir, runfile+'.json'), 'w') as jfile:
+        json.dump(runInfo, jfile, separators=(', ', ': '), indent=4)
 
 def panelIDCheck(port):
 
@@ -58,7 +209,6 @@ def cmdline(command):
     process.wait()
     return process.communicate()
 
-
 def closeSerial(serial):
     serial.flushInput()
     serial.flushOutput()
@@ -81,13 +231,11 @@ def cmdLoop(msg, serial, ntry=15, decode=True):
             if 'OK' in out[-4:].decode(): #errors="ignore" in decode()
                 return out
             else:
-                print("looping")
+                #print("looping")
                 serial.flushInput()
                 serial.flushOutput()
     print('ERROR: giving up')
 
-
-# A method of collecting the output with an interbyte timeout
 def collect_output(serial, decode=True): 		
     slept = False
     if decode:
@@ -127,8 +275,6 @@ def collect_output(serial, decode=True):
             slept = False
     return out
 
-
-
 def getNEvents(ser):
     stats = cmdLoop('get_run_statistics', ser).strip().split()
     events = int(stats[1])
@@ -144,23 +290,23 @@ def getRate(ser):
     trigrate = events / duration
     return round(trigrate, 1)
 
-def getNextRun(port, runsdir='runs'):
+def getNextRun(panel, runsdir='runs'):
     here = os.path.dirname(os.path.abspath(__file__))
     if os.path.exists(os.path.join(here, runsdir)):
-        lastrun = sorted(glob.glob(os.path.join(here, runsdir, f'port_{port}_run_*')))
+        lastrun = sorted(glob.glob(os.path.join(here, runsdir, f'panel_{panel}_run_*')))
         if lastrun:
             lastrun = int(lastrun[-1].split('run_')[-1])
         else:
             lastrun = 0
     else:
         lastrun = 0
-    run = 'port_{0}_run_{1}'.format(str(port),str(lastrun+1).zfill(7))
+    run = 'panel_{0}_run_{1}'.format(str(panel),str(lastrun+1).zfill(7))
     rdir = os.path.join(here, runsdir, run)
     os.makedirs(os.path.join(here, runsdir, run))
     return rdir, run
 
-# cobs decoding the frames
 def cobsDecode(binaryDump, debug=0):
+    # cobs decoding the frames
 
     # find all the frame markers
     markers = []

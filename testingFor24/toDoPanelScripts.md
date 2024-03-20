@@ -12,7 +12,7 @@ Edits to panel python scripts:
     7. Monitor function that dumps important info to log
 
     #check hang up on reading (probably need a catch on serial.readline)
-    
+        This seems to be fixed, i added a condition to flush serial output 
 
 
 

@@ -14,6 +14,33 @@ from subprocess import PIPE, Popen
 import numpy as np
 
 '''
+to make:
+    normalization
+        bias voltage 
+        threshold
+            keep the charge info for testing the gain method
+
+    error checking
+        serial timeout flagger 
+        check data being written
+        run a quick comm test to check for response
+            if none powercycle
+        
+    hour cycling for datafile writes
+        make version that resets the full thing 
+        version that stays up
+        which is more stable?
+        cut 2 seconds before end of hour
+
+    print uDAQ times to file for buffer reads?
+        might not be needed with the better readouts but worth a test
+    
+    
+
+'''
+
+
+'''
 function list:
 
 testFunction
@@ -51,7 +78,34 @@ cobsDecode
 '''
 
 
+def makeJsonSpoof(subruntime, args, rundir, runfile):
+     # dictionary of run info to be json dumped later
+    runInfo = {}
+    runInfo['subruntime'] = subruntime
+    runInfo['runtime'] = args.runtime
+    # the uid and temperature
+    #uid = cmdLoop('get_uid', ser).strip().split()
+    #print(f'uid is {uid}')
+    #uid = ' '.join(uid[:3])
+    #temp = float(cmdLoop('getmon', ser).strip().split()[1])
+    #runInfo['uid'] = uid
+    #runInfo['temperature'] = temp
+    runInfo['voltage'] = args.voltage
+    runInfo['threshold'] = args.disc
+    mydatetime = datetime.datetime.now()
+    mydate = str(mydatetime.date())
+    runInfo['date'] = mydate
+    #subruns = int(round(args.runtime/float(subruntime), 0))
+    #if subruns <= 0 : subruns = 1
+    #runInfo['subruns'] = subruns
+    #runInfo['runTimes'] = []
+    #runInfo['udaqTimeSubRuns'] = []
+    #runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]
+    mytime = time.time_ns() #time.clock_gettime_ns(time.CLOCK_REALTIME) #
+    runInfo['time'] = mytime
 
+    with open(os.path.join(rundir, runfile+'.json'), 'w') as jfile:
+        json.dump(runInfo, jfile, separators=(', ', ': '), indent=4)
 
 
 
@@ -108,6 +162,7 @@ def init(args):
             sys.exit()
 
 def scheduleTriggers():
+    resetUDaq()
     apFake = argparse.ArgumentParser()
     apFake.add_argument('-v', '--voltage', dest='voltage', type=int, default=0,
                     help='voltage setting in daq units (default is 2650)')
@@ -116,7 +171,7 @@ def scheduleTriggers():
     argsFake = apFake.parse_args()
 
     print(argsFake)
-    '''
+
     cmdLoop('set_livetime_enable 1', ser)
     udaqTime = cmdLoop('print_time', ser).split('\n')[0]
     microTime = udaqTime.split(" ")
@@ -126,8 +181,6 @@ def scheduleTriggers():
         cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {microTime[2]}',ser,5)
         cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+100}',ser,5)
         cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+500}',ser,5)
-    
-    '''
     
 def deadTimeAppend(beginTime, endTime,rundir):
     f = open(f"{rundir}/bufferReadout.txt", "a")
@@ -152,9 +205,9 @@ def makeJson(subruntime, args, rundir, runfile):
     mydatetime = datetime.datetime.now()
     mydate = str(mydatetime.date())
     runInfo['date'] = mydate
-    subruns = int(round(args.runtime/float(subruntime), 0))
-    if subruns <= 0 : subruns = 1
-    runInfo['subruns'] = subruns
+    #subruns = int(round(args.runtime/float(subruntime), 0))
+    #if subruns <= 0 : subruns = 1
+    #runInfo['subruns'] = subruns
     runInfo['runTimes'] = []
     runInfo['udaqTimeSubRuns'] = []
     runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]

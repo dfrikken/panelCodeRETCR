@@ -8,20 +8,20 @@ functions are defined in hitBufferDefine.py
 
 '''
 
-
-
 import sys
 import os
 import argparse
 import time
 import glob
 import serial
-import datetime
+from datetime import datetime, timedelta
 import json
 from cobs import cobs
 import hitBufferDefine as hit
 import numpy as np
 
+#temp imports
+import random
 
  
 ap = argparse.ArgumentParser()
@@ -53,11 +53,14 @@ except:
 print('serial connection made')
 
 
-# reset the uDAQ to clear anything that lingers
-#hit.resetUDaq()
+
 
 #schedule trigs to latch udaq time to rpi with gpio monitor
-hit.scheduleTriggers()
+#hit.scheduleTriggers()
+#time.sleep(5)
+
+# reset the uDAQ to clear anything that lingers
+#hit.resetUDaq()
     
 # initialize the adcs, set voltage, threshold, etc.
 #hit.init(args)
@@ -72,13 +75,79 @@ hit.cmdLoop('set_cputrig_10mhz_enable 1',ser)
 hit.cmdLoop('set_cputrig_enable 1',ser) 
 #cmdLoop('trigout_width 10',ser)
 hit.cmdLoop('trigout_mode 2',ser) # 2 = trigger formed during buffer readout
+'''
 
 
 
-
-
+subrunTime = 27
 print(args)
 hit.testFunction()
+
+
+
+
+for run in range(5):
+    startTime = datetime.now()
+    print(f'start of run = {startTime}')
+    nextHour = startTime.replace(second=0, microsecond=0)+ timedelta(minutes=5)
+    print(f'end of run = {nextHour}')
+    n = 0
+    rundir, runfile = hit.getNextRun(1,"/Users/frikken.1/documents/ret/retcr24")
+    print(rundir, runfile)
+    hit.makeJsonSpoof(subrunTime,args, rundir, runfile)
+
+    while(True):
+        n+=1
+        now = datetime.now()
+        remainingTime = (nextHour - now).total_seconds()
+        if subrunTime < remainingTime:
+            print(f'run {run} subrun {n} with {remainingTime} seconds to hour')
+            time.sleep(subrunTime)
+            print(f'\tsimulated subrun complete sleeping random time for buffer read')
+            num = random.randrange(50,120)
+            #print(num/100)
+            beginTime = time.time_ns()
+            time.sleep(num/100)
+            endTime = time.time_ns()
+            hit.deadTimeAppend(beginTime, endTime, rundir)
+            print(f'\tbuffer read out to next subrun')
+            print(f'\ttime elapsed {(datetime.now() - startTime).total_seconds()} ')
+            print(" ")
+        else:
+            print(f'last subrun, sleeping for remaining time')
+            now = datetime.now()
+            remainingTime = (nextHour - now).total_seconds()
+            print(remainingTime)
+            if remainingTime>5:
+                print(f'\tsimulated subrun complete sleeping random time for buffer read')
+                time.sleep(remainingTime-2)
+                num = random.randrange(50,120)
+                beginTime = time.time_ns()
+                time.sleep(num/100)
+                endTime = time.time_ns()
+                hit.deadTimeAppend(beginTime, endTime, rundir)
+                print(f'\ttime elapsed {(datetime.now() - startTime).seconds} seconds')
+                print(datetime.now())
+                now = datetime.now()
+                remainingTime = (nextHour - now).total_seconds()
+                print(f'remaining time to sleep {remainingTime}')
+                time.sleep(remainingTime)
+                print(" ")
+                break
+            else:
+                print("here")
+                time.sleep(remainingTime)
+                break
+            
+
+
+
+
+
+
+
+
+'''
 for j in range(3):
     rundir, runfile = hit.getNextRun(1,"/Users/frikken.1/documents/ret/retcr24")
     print(runfile)
@@ -88,6 +157,8 @@ for j in range(3):
         t2 = np.uint64(time.time_ns())
         hit.deadTimeAppend(t,t2,rundir)
 '''
+
+
 
 
 

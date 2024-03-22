@@ -49,6 +49,7 @@ try:
     ser.flushOutput()
 except:
     print("ERROR: is the USB cable connected?")
+    hit.errorLogger("error connecting to uDAQ over serial")
     #sys.exit() #commented for testing
 print('serial connection made')
 
@@ -80,8 +81,8 @@ hit.cmdLoop('trigout_mode 2',ser) # 2 = trigger formed during buffer readout
 
 
 subrunTime = 27
-print(args)
-hit.testFunction()
+#print(args)
+#hit.testFunction()
 
 
 
@@ -95,13 +96,20 @@ for run in range(5):
     rundir, runfile = hit.getNextRun(1,"/Users/frikken.1/documents/ret/retcr24")
     print(rundir, runfile)
     hit.makeJsonSpoof(subrunTime,args, rundir, runfile)
+    gpioOut = hit.gpioMon(22,10,rundir)
+    gpioFile = str(gpioOut[0]).split('\\n')[1].split(" ")[2]
+    gpio = open(gpioFile,'r')
+    print(f'{len(gpio.readlines())} scheduled triggers captured\n')
+    gpio.close()
 
+    
     while(True):
         n+=1
         now = datetime.now()
         remainingTime = (nextHour - now).total_seconds()
         if subrunTime < remainingTime:
             print(f'run {run} subrun {n} with {remainingTime} seconds to hour')
+            print(f'sleeping for {subrunTime} seconds')
             time.sleep(subrunTime)
             print(f'\tsimulated subrun complete sleeping random time for buffer read')
             num = random.randrange(50,120)
@@ -114,10 +122,10 @@ for run in range(5):
             print(f'\ttime elapsed {(datetime.now() - startTime).total_seconds()} ')
             print(" ")
         else:
-            print(f'last subrun, sleeping for remaining time')
             now = datetime.now()
             remainingTime = (nextHour - now).total_seconds()
-            print(remainingTime)
+            print(f'last subrun, sleeping for remaining time of {remainingTime} seconds')
+            
             if remainingTime>5:
                 print(f'\tsimulated subrun complete sleeping random time for buffer read')
                 time.sleep(remainingTime-2)
@@ -133,10 +141,22 @@ for run in range(5):
                 print(f'remaining time to sleep {remainingTime}')
                 time.sleep(remainingTime)
                 print(" ")
+                errFile = 'logs/errorLog.txt'
+                check_file = os.path.isfile(errFile)
+                if( check_file):
+                    print(f'moving error log to run directory {runfile}')
+                    #print(f'mv {errFile} {rundir}')
+                    hit.cmdline(f'mv {errFile} {rundir}')
                 break
             else:
                 print("here")
                 time.sleep(remainingTime)
+                errFile = 'logs/errorLog.txt'
+                check_file = os.path.isfile(errFile)
+                if( check_file):
+                    print(f'moving error log to run directory {runfile}')
+                    #print(f'mv {errFile} {rundir}')
+                    hit.cmdline(f'mv {errFile} {rundir}')
                 break
             
 

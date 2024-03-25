@@ -12,6 +12,7 @@ from cobs import cobs
 import subprocess
 from subprocess import PIPE, Popen
 import numpy as np
+import signal
 
 global logDir
 logDir = "logs/"
@@ -19,6 +20,9 @@ logDir = "logs/"
 
 '''
 to do:
+
+    what can/should i thread??
+
     normalization
         bias voltage 
         threshold
@@ -44,7 +48,6 @@ to do:
     rewrite panelIDCheck and checkUDAQ to not use commTest.py
 
     gpio monitor usage
-        -start/stop gpio monitor output into rundir
         -seperate scheduled and normal triggers
     
 
@@ -99,7 +102,7 @@ infoLogger
     -might not use but its here
 gpioMon
     - run the c gpio monitor
-    - has flag for waiting for process end (if checking number of scheduled triggers)
+    - has flag for waiting for process end 
 cmdlineNoWait
     - issue terminal commands but dont wait for process to complete
 '''
@@ -145,8 +148,9 @@ def testFunction():
     
 #############
 
-
 def resetUDaq(ser): #error log entry made
+
+    print('\nreseting the uDAQ settings')
      # reset any previous settings on the udaq
     commands = [
         'stop_run',
@@ -160,7 +164,10 @@ def resetUDaq(ser): #error log entry made
             errorLogger('error reseting uDAQ, may be unresponsive')
             sys.exit()
 
-def init(args): #error log entry made
+    print("uDAQ reset\n")
+
+def init(ser,args): #error log entry made
+    resetUDaq(ser)
     # initialize the adcs, set voltage, threshold, etc.
     commands = [
         'auxdac 1 {0}'.format(args.voltage),
@@ -198,34 +205,32 @@ def init(args): #error log entry made
             sys.exit()
 
 def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
-    resetUDaq(ser)
+    
     apFake = argparse.ArgumentParser()
     apFake.add_argument('-v', '--voltage', dest='voltage', type=int, default=0,
                     help='voltage setting in daq units (default is 2650)')
     apFake.add_argument('-d', '--disc', dest='disc', type=int, default=3900,
                     help='discriminator setting in daq units (default is 1390)')
+    apFake.add_argument('-p','--port',dest="PORT",type=int,default=0)
     argsFake = apFake.parse_args()
 
-    print(argsFake)
+    #print(argsFake)
+
+    init(ser,argsFake)
 
     cmdLoop('set_livetime_enable 1', ser)
     udaqTime = cmdLoop('print_time', ser).split('\n')[0]
     microTime = udaqTime.split(" ")
-    print(f'udaq time is {udaqTime}')
-    print(f' edit time = {microTime[1]}')
-    for i in range(1,3):
+    numTriggers = 0
+    #print(f'udaq time is {udaqTime}')
+    #print(f' edit time = {microTime[1]}')
+    #print(int(microTime[2]))
+    for i in range(1,4):
         cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {microTime[2]}',ser,5)
-        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+100}',ser,5)
-        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+500}',ser,5)
+        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+50000}',ser,5)
+        numTriggers+=2
 
-    gpioOut = gpioMon(pin,5,rundir)
-    gpioFile = str(gpioOut[0]).split('\\n')[1].split(" ")[2]
-    gpio = open(gpioFile,'r')
-    print(f'{len(gpio.readlines())} scheduled triggers captured')
-    if (len(gpio.readlines()) == 0):
-        print('no scheduled triggers captured')
-        errorLogger('no scheduled triggers captured')
-    gpio.close()
+    return numTriggers
     
 def deadTimeAppend(beginTime, endTime,rundir): #error log entry made
     try:
@@ -236,7 +241,7 @@ def deadTimeAppend(beginTime, endTime,rundir): #error log entry made
     #print(f'sub run n at {beginTime}  {endTime}')
     #print(f'buffer readout was {(endTime - beginTime)/1e9} seconds')
 
-def makeJson(subruntime, args, rundir, runfile): #error log entry made
+def makeJson(ser,subruntime, args, rundir, runfile): #error log entry made
     try:
         # dictionary of run info to be json dumped later
         runInfo = {}
@@ -254,11 +259,10 @@ def makeJson(subruntime, args, rundir, runfile): #error log entry made
         mydatetime = datetime.datetime.now()
         mydate = str(mydatetime.date())
         runInfo['date'] = mydate
+        #dont need subrun info if im storing the buffer readout time
         #subruns = int(round(args.runtime/float(subruntime), 0))
         #if subruns <= 0 : subruns = 1
         #runInfo['subruns'] = subruns
-        runInfo['runTimes'] = []
-        runInfo['udaqTimeSubRuns'] = []
         runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]
         mytime = time.time_ns() #time.clock_gettime_ns(time.CLOCK_REALTIME) #
         runInfo['time'] = mytime
@@ -269,11 +273,11 @@ def makeJson(subruntime, args, rundir, runfile): #error log entry made
     except:
         errorLogger('error writing json file')
 
-def panelIDCheck(port):
+def panelIDCheck(ser):
 
     #list panel IDs
-    panel3ID = "240045 48535005 20353041"
-    panel12ID = "240004 48535005 20353041"  
+    panel3ID = "240045 48535005 20353041" #osu lab panel
+    panel12ID = "240004 48535005 20353041"  #osu lab panel
     panel2ID = "240032 48535005 20353041"
     panel1ID = "24002f 48535005 20353041"
     panel8ID = "21000f 48535005 20353041"
@@ -293,7 +297,18 @@ def panelIDCheck(port):
     
     panelNumberList=[2,1,8,4,11,10,13,9,6,5,7,14,3,12]
 
-    #comm test to read panelID from result
+    uid = cmdLoop('get_uid', ser).strip().split()
+    #print(f'uid is {uid}')
+    uid = ' '.join(uid[:3])
+    #print(f'after join uid is {uid} type {type(uid)}')
+    for n,j in enumerate(panelIDList):
+        if(uid == j):
+            print(f'panel {panelNumberList[n]} active')
+            break
+    '''
+   
+            
+     #comm test to read panelID from result
     commOutLine = cmdline("python /home/retcr/deployment/stationPIPanelSoftware/hitBufferMode/commTest.py -p " + str(port))
     if "OK" in str(commOutLine):
                 commLineSplit = str(commOutLine[0]).split('\\n')
@@ -301,6 +316,8 @@ def panelIDCheck(port):
                     if(commLineSplit[1] in j):
                         print(f'panel {panelNumberList[n]} active at port {port}')
                         break
+    '''
+   
 
     return panelNumberList[n]
 
@@ -315,9 +332,19 @@ def cmdline(command):
     return process.communicate()
 
 def closeSerial(serial):
+    resetUDaq(serial)
+    cmdLoop('trigout_mode 1',serial)
+    cmdLoop('stop_run', serial, 100)
+    cmdLoop('set_livetime_enable 0', serial)
+    # paranoid safety measure - set voltage back to 0
+    cmdLoop('auxdac 1 0', serial)
+    cmdLoop('auxdac 1 0', serial)
+
     serial.flushInput()
     serial.flushOutput()
     serial.close()
+    print("serial connection closed")
+    return 0
 
 def cmdLoop(msg, serial, ntry=15, decode=True): #error log entry made
     for i in range(ntry):
@@ -395,10 +422,11 @@ def getNEvents(ser): #error log entry made
 def getRate(ser): #error log entry made
     try:
         stats = cmdLoop('get_run_statistics', ser).strip().split()
-        print(stats[1],stats[4])
+        
         events = int(stats[1])
         duration = float(stats[4])
         trigrate = events / duration
+        print(f'\nrate is {round(trigrate, 1)} Hz over {duration} seconds\n')
         return round(trigrate, 1)
     except:
         errorLogger('error getting trigger rate in buffer')
@@ -499,7 +527,7 @@ def infoLogger():
     #placeholder may not use 
     print('info logged')
 
-def gpioMon(pin, seconds,rundir, wait = 1):
+def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
     print(f'\ngpio monitor for pin {pin}')
     print(f'running for {seconds} seconds')
     if 1==wait:
@@ -507,15 +535,53 @@ def gpioMon(pin, seconds,rundir, wait = 1):
         return out
     
     if 0 == wait:
-        out = cmdlineNoWait(f'./testGPIO {pin} {seconds} {rundir}')
+        out = cmdlineNoWait(f'./gpioMon {pin} {rundir}',seconds)
+        print(f'gpio monitor of scheduled triggers complete, checking number of triggers registered\n')
+        gpioFile = f'{rundir}/gpio{pin}Mon.txt'
+        #print(gpioFile)
+        gpio = open(gpioFile,'r')
+        numberOfLines = len(gpio.readlines())
+        #print(f'{numberOfLines} lines in the gpio mon file')
+        
+        if fullRun == 0:
+            
+            print(f'{numberOfLines} of {numTriggersExpect} scheduled triggers captured')
+            if (numberOfLines != numTriggersExpect):
+                print('problem capturing triggers')
+                errorLogger(f'error: problem capturing triggers ({numberOfLines} of {numTriggersExpect} scheduled triggers captured)')
+
+        if fullRun ==1:
+            '''
+                gpio.seek(0)
+
+            for i in gpio.readlines():
+                if( "full" in i):
+                    eventCounter=0
+                    continue
+                eventCounter+=1
+            '''
+            
+            print(f'{numberOfLines - (numTriggersExpect+2)} entries in gpio monitor full run section')
+                
+
+        gpio.close()
+        
         return 0
 
-def cmdlineNoWait(command):
+def cmdlineNoWait(command,waitTime = 10):
 
     process = Popen(
         args=command,
         stdout=subprocess.PIPE,
-        shell=True
+        shell=True,
+        preexec_fn=os.setsid
     )
-    #process.wait()
-    #return process.communicate()
+    time.sleep(waitTime)
+    os.killpg(os.getpgid(process.pid), signal.SIGINT)
+    
+    return 0
+
+
+
+
+    

@@ -94,7 +94,7 @@ for run in range(5):
     print(f'end of run = {nextHour}')
     n = 0
     rundir, runfile = hit.getNextRun(1,"/Users/frikken.1/documents/ret/retcr24")
-    print(rundir, runfile)
+    #print(rundir, runfile)
     hit.makeJsonSpoof(subrunTime,args, rundir, runfile)
     gpioOut = hit.gpioMon(22,10,rundir)
     gpioFile = str(gpioOut[0]).split('\\n')[1].split(" ")[2]

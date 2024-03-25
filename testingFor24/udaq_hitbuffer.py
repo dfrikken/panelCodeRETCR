@@ -203,6 +203,7 @@ def main():
         #runInfo['udaqTimeSubRuns'].append(f'{i} end  {udaqTimeValue}')
         #out = cmdLoop('stop_run', ser, 100)
         if out is None:
+            print('no data in dump')
             break
         stopRun = datetime.datetime.now()
         # the hex dump - useful for debugging
@@ -241,8 +242,8 @@ def main():
     if out is not None:
         cmdLoop('stop_run', ser, 100)
         #cmdLoop('trigout_mode 1',ser) #adding as test
-        cmdLoop('set_cputrig_enable 1',ser) #testing on
-        cmdLoop('set_cputrig_10mhz_enable 1',ser) #testing on
+        #cmdLoop('set_cputrig_enable 1',ser) #testing on
+        #cmdLoop('set_cputrig_10mhz_enable 1',ser) #testing on
         cmdLoop('set_livetime_enable 0', ser)
         
         

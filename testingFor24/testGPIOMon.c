@@ -79,11 +79,7 @@ int main(int nargs, char ** args){
 
   struct pollfd fdset; 
 
-
-
-
-    
-    FILE *fptr;
+      FILE *fptr;
     double timeSleep = 500000;
     
     if (access(output_path, F_OK) == 0) {
@@ -96,6 +92,10 @@ int main(int nargs, char ** args){
         printf("gpio mon file does not exist, creating...");
         // file doesn't exist
     }
+
+
+    
+  
     int nint = 0;
     while(when.tv_sec < endTime){
         clock_gettime(CLOCK_REALTIME,&when);

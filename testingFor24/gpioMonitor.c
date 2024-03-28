@@ -94,7 +94,7 @@ int main(int nargs, char ** args)
   if (access(output_path, F_OK) == 0) {
       // file exists
       fptr = fopen(output_path, "a");
-      fprintf(fptr,"\nfull run starting\n");
+      fprintf(fptr,"\nscheduled triggers complete\n");
       printf("gpio monitor file exists opening with append to add full run\n");
   } else {
       fptr = fopen(output_path, "w");

@@ -37,18 +37,19 @@ to do:
     logger for important steps and information with timestamps
         
     hour cycling for datafile writes
-        make version that resets the full thing 
-        version that stays up
-        which is more stable?
-        cut 2 seconds before end of hour
+        - this is done in a test version (hitBufferMode.py), integrate it with piTesting using the panels
+        make version that resets the full thing and version that stays up
+            which is more stable?
+            - done cut 2 seconds before end of hour
 
-    print uDAQ times to file for buffer reads?
+    print uDAQ times to file for buffer reads????
         might not be needed with the better readouts but worth a test
     
     rewrite panelIDCheck and checkUDAQ to not use commTest.py
 
-    gpio monitor usage
-        -seperate scheduled and normal triggers
+    gpio monitor 
+        done -seperate scheduled and normal triggers
+        look into cleaning the signal with a resister and checking accuracy of buffer to gpio monitor
     
 
 '''
@@ -205,7 +206,7 @@ def init(ser,args): #error log entry made
             sys.exit()
 
 def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
-    
+    scheduledTriggerFile = open(rundir+"/scheduledTriggers.txt","a")
     apFake = argparse.ArgumentParser()
     apFake.add_argument('-v', '--voltage', dest='voltage', type=int, default=0,
                     help='voltage setting in daq units (default is 2650)')
@@ -226,10 +227,13 @@ def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
     #print(f' edit time = {microTime[1]}')
     #print(int(microTime[2]))
     for i in range(1,4):
-        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {microTime[2]}',ser,5)
-        cmdLoop(f'schedule_trigout_pulse {microTime[0]} {int(microTime[1])+i} {int(microTime[2])+50000}',ser,5)
+        time1 = f'{microTime[0]} {int(microTime[1])+i} {microTime[2]}'
+        time2 = f'{microTime[0]} {int(microTime[1])+i} {int(microTime[2])+50000}'
+        cmdLoop(f'schedule_trigout_pulse {time1}',ser,5)
+        cmdLoop(f'schedule_trigout_pulse {time2}',ser,5)
+        scheduledTriggerFile.write(f'{time1}\n{time2}\n')
         numTriggers+=2
-
+    scheduledTriggerFile.close()
     return numTriggers
     
 def deadTimeAppend(beginTime, endTime,rundir): #error log entry made
@@ -549,6 +553,7 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
             if (numberOfLines != numTriggersExpect):
                 print('problem capturing triggers')
                 errorLogger(f'error: problem capturing triggers ({numberOfLines} of {numTriggersExpect} scheduled triggers captured)')
+                return 0
 
         if fullRun ==1:
             '''
@@ -566,7 +571,7 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
 
         gpio.close()
         
-        return 0
+        return 1
 
 def cmdlineNoWait(command,waitTime = 10):
 

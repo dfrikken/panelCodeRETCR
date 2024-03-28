@@ -21,7 +21,7 @@ import random
 
 #hit.testFunction()
 
-subrunTime = 3
+subrunTime = 10
 
 
 def main():
@@ -72,7 +72,11 @@ def main():
 
     numScheduledTriggers = hit.scheduleTriggers(ser,1,rundir,10)
 
-    hit.gpioMon(pin,3,rundir,0,numScheduledTriggers,0)
+    scheduledTriggerFlag = hit.gpioMon(pin,3,rundir,0,numScheduledTriggers,0)
+
+    if( scheduledTriggerFlag ==0):
+        numScheduledTriggers = hit.scheduleTriggers(ser,1,rundir,10)
+        scheduledTriggerFlag = hit.gpioMon(pin,3,rundir,0,numScheduledTriggers,0)
 
 ########################################
 ####### start the data run #############
@@ -96,6 +100,7 @@ def main():
 
     #subrun 
     hit.cmdLoop(f'run 1 3500 0', ser, 5) #enable "run" in this case a subrun. subrun lasts till 'stop_run' command issued
+    print(f'sleeping for {subrunTime} seconds to form the subrun')
     time.sleep(subrunTime)  #sleep the python program while the uDAQ does its thing
     out = hit.cmdLoop('stop_run', ser, 100) #stop the subrun to read the buffer out (deadtime for panel data, but still forming triggers to central)
     hit.getRate(ser) # print the trigger rate with duration (duration here in case you overfill the buffer if duration != subrunTime then overwrite)
@@ -129,8 +134,8 @@ def main():
         #print(f'mv {errFile} {rundir}')
         hit.cmdline(f'mv {errFile} {rundir}')
 
-    print('sleeping to wait for the gpio monitor thread')
-    time.sleep(10)
+    #print('sleeping to wait for the gpio monitor thread')
+    #time.sleep(10)
     print(f'{nEvents} in buffer')
     return
 

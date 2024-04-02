@@ -45,7 +45,7 @@ int main(int nargs, char ** args)
         printf("length of args array %d\n", elements_in_x);
         printf("args are %s\n",args[2]);
         gpio = atoi(args[1]);
-        sprintf(output_file,"gpio%dMon.txt",gpio);
+        sprintf(output_file,"gpioMon.txt");
   
         if(nargs>2) {
             printf(" path is %s\n", args[2]);
@@ -99,6 +99,7 @@ int main(int nargs, char ** args)
   } else {
       fptr = fopen(output_path, "w");
       printf("gpio mon file does not exist, creating...\n");
+      //fprintf("beggining gpio monitor for pin %d\n",gpio);
       // file doesn't exist
   }
 
@@ -131,7 +132,7 @@ int main(int nargs, char ** args)
       lseek(fdset.fd,0,SEEK_SET); 
       int len = read(fdset.fd,buf,sizeof(buf)-1); 
       if (nint) {
-          printf("gpio%d [%d] TIMER: %c at %d.%09d\n",gpio, nint, buf[0], when.tv_sec, when.tv_nsec); 
+          //printf("gpio%d [%d] TIMER: %c at %d.%09d\n",gpio, nint, buf[0], when.tv_sec, when.tv_nsec); 
           fprintf(fptr,"%d,%d.%09d\n",gpio, when.tv_sec, when.tv_nsec); 
       }
       //printf("time is %d\n",when.tv_sec);
@@ -141,7 +142,7 @@ int main(int nargs, char ** args)
    
   }
 
-
+  //fprintf(fptr,"last %d,%d.%09d\n",gpio, when.tv_sec, when.tv_nsec); 
   write(edge_fd,"none",4); 
   fclose(fptr);
 }

@@ -14,9 +14,10 @@ def main():
                     help='/dev/ttyUSB port to test comms with')
     args = ap.parse_args()
     PORT = '/dev/ttyUSB'+ args.PORT
-    ser = serial.Serial(port=PORT, baudrate=1000000, parity=serial.PARITY_EVEN)
-    #ser.flushInput()
-    #ser.flushOutput()
+    ser = serial.Serial(port=PORT, baudrate=1000000, parity=serial.PARITY_EVEN,timeout=3)
+    ser.flushInput()
+    ser.flushOutput()
+    #print('flushed')
     
     for cmd in ['get_uid', 'getmon']:
         write(ser, cmd)

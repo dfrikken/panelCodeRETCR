@@ -14,8 +14,12 @@ from subprocess import PIPE, Popen
 import numpy as np
 import signal
 
+
 global logDir
 logDir = "logs/"
+global serialPort
+
+
 
 
 '''
@@ -58,6 +62,8 @@ to do:
 '''
 function list:
 
+changeGlobal
+    - allows the controlling program to change the log directory
 testFunction
     - just used to test importing working correctly
 resetUDaq
@@ -106,6 +112,9 @@ gpioMon
     - has flag for waiting for process end 
 cmdlineNoWait
     - issue terminal commands but dont wait for process to complete
+panelStartup
+
+powerCycle
 '''
 
 ########## temporary functions
@@ -147,7 +156,50 @@ def testFunction():
    
     print('the definition file imported succesfully')
     
+def handler(signum, frame):
+    print('timeout handler')
+    errorLogger('error: timeout handler met')
+    '''
+    print('power cycling')
+    powerCycle()
+    time.sleep(.2)
+    print('starting panels')
+    panelStartup()
+    
+    '''
+    upFlag = checkUDAQResponse(serialPort)
+    if upFlag == 0:
+        sys.exit()
+    else:
+        print('moving on')
+    #raise Exception('Action took too much time')
 #############
+'''
+def handler2(signum, frame):
+print('second alarm tripped')
+errorLogger("error: timeout. power cycle required")
+#powerCycle()
+#signal.alarm(0)
+#panelStartup()
+#cmdline(f'python /home/retcr/deployment/stationPIPanelSoftware/newPanelStart.py')
+
+
+
+''' 
+
+
+    
+
+def changeGlobals(newLogDir,ser):
+    global serialPort
+    serialPort = ser
+    global logDir
+    logDir = newLogDir
+    print(f'log directory changed to {logDir}')
+    if not os.path.isdir(logDir):
+        print('directory does not exist, creating')
+        cmdline(f'mkdir {logDir}')
+    return logDir
 
 def resetUDaq(ser): #error log entry made
 
@@ -190,8 +242,8 @@ def init(ser,args): #error log entry made
         
         'adc_hist_enable 0',  # turn off ascii histograms
         
-        'adc_recording_thresholds  0 0 0',  # high gain
-        'adc_recording_thresholds  2 0 0',  # med gain
+        'adc_recording_thresholds 0 0 0',  # high gain
+        'adc_recording_thresholds 2 0 0',  # med gain
         'adc_recording_thresholds 12 0 0',  # low gain
         
         'adc_enable  0 1',  # high gain
@@ -221,11 +273,13 @@ def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
 
     cmdLoop('set_livetime_enable 1', ser)
     udaqTime = cmdLoop('print_time', ser).split('\n')[0]
+    #print(udaqTime)
     microTime = udaqTime.split(" ")
     numTriggers = 0
     #print(f'udaq time is {udaqTime}')
     #print(f' edit time = {microTime[1]}')
     #print(int(microTime[2]))
+    '''
     for i in range(1,4):
         time1 = f'{microTime[0]} {int(microTime[1])+i} {microTime[2]}'
         time2 = f'{microTime[0]} {int(microTime[1])+i} {int(microTime[2])+50000}'
@@ -233,6 +287,22 @@ def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
         cmdLoop(f'schedule_trigout_pulse {time2}',ser,5)
         scheduledTriggerFile.write(f'{time1}\n{time2}\n')
         numTriggers+=2
+    
+    '''
+
+    splitTime = udaqTime.split(' ')
+
+    timeVal = splitTime[1] +'.'+ splitTime[2]
+    addTime = np.float64(timeVal)
+    addTime = np.float64(addTime)+1
+    for i in range(10):
+        addTime = np.float64(addTime)+.05
+        addString = f"{0} {str(addTime.round(6)).split('.')[0]} {str(addTime.round(6)).split('.')[1]}"
+        #print(addString)
+        cmdLoop(f'schedule_trigout_pulse {addString}',ser,5)
+        scheduledTriggerFile.write(f'{addString}\n')
+        numTriggers+=1
+    
     scheduledTriggerFile.close()
     return numTriggers
     
@@ -240,6 +310,7 @@ def deadTimeAppend(beginTime, endTime,rundir): #error log entry made
     try:
         f = open(f"{rundir}/bufferReadout.txt", "a")
         f.write(f'{beginTime},{endTime}\n')
+        f.close()
     except:
         errorLogger('error writing dead time')
     #print(f'sub run n at {beginTime}  {endTime}')
@@ -335,18 +406,18 @@ def cmdline(command):
     process.wait()
     return process.communicate()
 
-def closeSerial(serial):
-    resetUDaq(serial)
-    cmdLoop('trigout_mode 1',serial)
-    cmdLoop('stop_run', serial, 100)
-    cmdLoop('set_livetime_enable 0', serial)
+def closeSerial(serialPort):
+    resetUDaq(serialPort)
+    cmdLoop('trigout_mode 1',serialPort)
+    cmdLoop('stop_run', serialPort, 100)
+    cmdLoop('set_livetime_enable 0', serialPort)
     # paranoid safety measure - set voltage back to 0
-    cmdLoop('auxdac 1 0', serial)
-    cmdLoop('auxdac 1 0', serial)
+    cmdLoop('auxdac 1 0', serialPort)
+    cmdLoop('auxdac 1 0', serialPort)
 
-    serial.flushInput()
-    serial.flushOutput()
-    serial.close()
+    serialPort.flushInput()
+    serialPort.flushOutput()
+    serialPort.close()
     print("serial connection closed")
     return 0
 
@@ -354,13 +425,20 @@ def cmdLoop(msg, serial, ntry=15, decode=True): #error log entry made
     for i in range(ntry):
         serial.flushInput()
         serial.flushOutput()
-        print(f'{msg} try {i}')
+        #print(f'{msg} try {i}')
+        infoLogger(f'{msg} try {i}')
         serial.write((msg+'\n').encode())
+        #start = time.time()
         out = collect_output(serial, decode)
+        #print('It took', time.time()-start, 'seconds.')
+        
         if decode:
             if 'OK' in out:
+
                 return out
             else:
+                #print('in the flush section')
+                #print(out)
                 serial.flushInput()
                 serial.flushOutput()
         else:  
@@ -374,13 +452,17 @@ def cmdLoop(msg, serial, ntry=15, decode=True): #error log entry made
     errorLogger('error in serial comms with uDAQ, checking for response')
     #checkUDAQResponse(serial)
 
-def collect_output(serial, decode=True): 		
+def collect_output(serial, decode=True): 
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(5) #Set the parameter to the amount of seconds you want to wait
+
+
     slept = False
     if decode:
         out = ''
     else:
         out = bytearray()
-        
+    nTimes = 0
     while True:
         n = serial.inWaiting()
         if n == 0:
@@ -391,26 +473,42 @@ def collect_output(serial, decode=True):
                 slept = not slept
             if decode:
                 if slept == True:
+                    #print(slept)
+                    #if( nTimes > 10):
+                        #break
+                    #print('here')
+                    #serial.flushInput()
+                    #serial.flushOutput()
+                    #print('flushing')
+                    #break
                     continue
                 slept = not slept
+                #print(slept)
+                
             
         else:
             if decode:
-                line = serial.readline()
+                n = serial.inWaiting()
+                #print(n)
+                if n!=0:
+                    line = serial.read(n)
+                    
+                    
                 if not line: 
+                    print('in not line')
                     break
                 out += line.decode()
+                #print(out)
                 n = serial.inWaiting()
-                #print(line)
                 if n!=0:
                     line = serial.read(n)
                     out += line.decode()
-                serial.flushInput()
-                serial.flushOutput()
+                    print('extending')
                 break
             else:
                 out.extend(serial.read(n))
             slept = False
+    signal.alarm(0)
     return out
 
 def getNEvents(ser): #error log entry made
@@ -430,7 +528,7 @@ def getRate(ser): #error log entry made
         events = int(stats[1])
         duration = float(stats[4])
         trigrate = events / duration
-        print(f'\nrate is {round(trigrate, 1)} Hz over {duration} seconds\n')
+        print(f'\nrate is {round(trigrate, 1)} Hz over {duration} seconds {events} in buffer\n')
         return round(trigrate, 1)
     except:
         errorLogger('error getting trigger rate in buffer')
@@ -497,26 +595,39 @@ def cobsDecode(binaryDump, debug=0):
         
     return alldata
 
-def checkUDAQResponse(serial,port): #error log entry made
+def checkUDAQResponse(serial): #error log entry made
     serial.flushInput()
     serial.flushOutput()
-
-    commOutLine = cmdline("python /home/retcr/deployment/stationPIPanelSoftware/hitBufferMode/commTest.py -p " + str(port))
+    '''
+     commOutLine = cmdline("python /home/retcr/deployment/stationPIPanelSoftware/hitBufferMode/commTest.py -p " + str(port))
     if "OK" in str(commOutLine):
                 commLineSplit = str(commOutLine[0]).split('\\n')
                 for n,j in enumerate(panelIDList):
                     if(commLineSplit[1] in j):
                         print(f'panel {panelNumberList[n]} active at port {port}')
                         break
+    '''
+    panel = panelIDCheck(serial)
+    if panel:
+        print('panels responsive continuing')
+        return 1
     else:
-        print(f'error in port {port}, panel non-responsive, may need power cycle')
+        print(f'error in panel, panel non-responsive, may need power cycle')
+        return 0
 
-def powerCycle(port):
+def powerCycle():
+
     #placeholder for now to be filled in later
     #cycle 24V power
     #newPanelStart 
     #restart both panels' data scripts
     print("power cycling the 24V and restarting panels ")
+    cmdline('python /home/retcr/deployment/powerCycle.py')
+    #time.sleep(5)
+    #cmdline(f'python3 /home/retcr/deployment/stationPIPanelSoftware/newPanelStart.py')
+    #time.sleep(10)
+    errorLogger("Info: panels power cycled")
+
 
 def errorLogger(message):
     errFile = open(logDir+"errorLog.txt","a")
@@ -527,9 +638,12 @@ def errorLogger(message):
     print(f'\nerror logged\n\n\t{message}\n')
     print("*****************\n")
 
-def infoLogger():
-    #placeholder may not use 
-    print('info logged')
+def infoLogger(message):
+    #print(f'logdir is {logDir}')
+    infoFile = open(logDir+"/infoLog.txt","a")
+    infoFile.write(message+'\n')
+    infoFile.close()
+    
 
 def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
     print(f'\ngpio monitor for pin {pin}')
@@ -541,15 +655,18 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
     if 0 == wait:
         out = cmdlineNoWait(f'./gpioMon {pin} {rundir}',seconds)
         print(f'gpio monitor of scheduled triggers complete, checking number of triggers registered\n')
-        gpioFile = f'{rundir}/gpio{pin}Mon.txt'
+        gpioFile = f'{rundir}/gpioMon.txt'
         #print(gpioFile)
-        gpio = open(gpioFile,'r')
-        numberOfLines = len(gpio.readlines())
+        #gpio = open(gpioFile,'r')
+        #numberOfLines = len(gpio.readlines())
+        with open(gpioFile, "rbU") as f:
+            numberOfLines = sum(1 for _ in f)
         #print(f'{numberOfLines} lines in the gpio mon file')
         
         if fullRun == 0:
             
             print(f'{numberOfLines} of {numTriggersExpect} scheduled triggers captured')
+            infoLogger(f'{numberOfLines} of {numTriggersExpect} scheduled triggers captured')
             if (numberOfLines != numTriggersExpect):
                 print('problem capturing triggers')
                 errorLogger(f'error: problem capturing triggers ({numberOfLines} of {numTriggersExpect} scheduled triggers captured)')
@@ -566,10 +683,10 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
                 eventCounter+=1
             '''
             
-            print(f'{numberOfLines - (numTriggersExpect+2)} entries in gpio monitor full run section')
+            print(f'\n\n{numberOfLines - (numTriggersExpect+2)} entries in gpio monitor full run section\n\n')
                 
 
-        gpio.close()
+        #gpio.close()
         
         return 1
 
@@ -586,7 +703,38 @@ def cmdlineNoWait(command,waitTime = 10):
     
     return 0
 
+def panelStartup():
+    panelUp = 0
+    for panel in range(2):
+        #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
+        for t in range(5):
+            #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
+            outLine = cmdline("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
+            time.sleep(.3)
+            #print(outLine)
+
+            if 'done' in str(outLine):
+                print("done")
+                panelUp+=1
+                break
+    if panelUp ==2:
+        print('both panels active')
+        return 1
+
+def powerCycle():
+    import RPi.GPIO as gpio
 
 
+    gpio.setmode(gpio.BCM)
+    gpio.setup(26, gpio.OUT)
+
+    print("high = off")
+    gpio.output(26, gpio.HIGH)
+
+    time.sleep(.1)
+
+    print("low = on")
+    gpio.output(26, gpio.LOW)
+    time.sleep(.5)
 
     

@@ -17,15 +17,13 @@ import signal
 
 global logDir
 logDir = "logs/"
-global serialPort
+#global serialPort
 
 
 
 
 '''
 to do:
-
-    what can/should i thread??
 
     normalization
         bias voltage 
@@ -39,23 +37,14 @@ to do:
             if none powercycle
     
     logger for important steps and information with timestamps
-        
-    hour cycling for datafile writes
-        - this is done in a test version (hitBufferMode.py), integrate it with piTesting using the panels
-        make version that resets the full thing and version that stays up
-            which is more stable?
-            - done cut 2 seconds before end of hour
 
-    print uDAQ times to file for buffer reads????
-        might not be needed with the better readouts but worth a test
-    
-    rewrite panelIDCheck and checkUDAQ to not use commTest.py
+    check difference between gpiomon scheduled trigs accuracy per run vs per power cycle
+        - use coincident events to check
 
     gpio monitor 
         done -seperate scheduled and normal triggers
         look into cleaning the signal with a resister and checking accuracy of buffer to gpio monitor
     
-
 '''
 
 
@@ -113,44 +102,12 @@ gpioMon
 cmdlineNoWait
     - issue terminal commands but dont wait for process to complete
 panelStartup
-
+    - start the panels for operation after power cycling   
 powerCycle
+    - cycle the 24V power to reset the uDAQ
 '''
 
 ########## temporary functions
-def makeJsonSpoof(subruntime, args, rundir, runfile):
-    try:
-        # dictionary of run info to be json dumped later
-        runInfo = {}
-        runInfo['subruntime'] = subruntime
-        runInfo['runtime'] = args.runtime
-        # the uid and temperature
-        #uid = cmdLoop('get_uid', ser).strip().split()
-        #print(f'uid is {uid}')
-        #uid = ' '.join(uid[:3])
-        #temp = float(cmdLoop('getmon', ser).strip().split()[1])
-        #runInfo['uid'] = uid
-        #runInfo['temperature'] = temp
-        runInfo['voltage'] = args.voltage
-        runInfo['threshold'] = args.disc
-        mydatetime = datetime.datetime.now()
-        mydate = str(mydatetime.date())
-        runInfo['date'] = mydate
-        #subruns = int(round(args.runtime/float(subruntime), 0))
-        #if subruns <= 0 : subruns = 1
-        #runInfo['subruns'] = subruns
-        #runInfo['runTimes'] = []
-        #runInfo['udaqTimeSubRuns'] = []
-        #runInfo['udaq_time'] = cmdLoop('print_time', ser).split('\n')[0]
-        mytime = time.time_ns() #time.clock_gettime_ns(time.CLOCK_REALTIME) #
-        runInfo['time'] = mytime
-    
-        with open(os.path.join(rundir, runfile+'.json'), 'w') as jfile:
-            json.dump(runInfo, jfile, separators=(', ', ': '), indent=4)
-    except:
-        print('json creation error')
-        #print(rundir)
-        errorLogger('error creating json file')
 
 def testFunction():
    
@@ -159,37 +116,13 @@ def testFunction():
 def handler(signum, frame):
     print('timeout handler')
     errorLogger('error: timeout handler met')
-    '''
-    print('power cycling')
-    powerCycle()
-    time.sleep(.2)
-    print('starting panels')
-    panelStartup()
     
-    '''
     upFlag = checkUDAQResponse(serialPort)
-    if upFlag == 0:
-        sys.exit()
-    else:
-        print('moving on')
+    print(f'upflag is {upFlag}')
+    sys.exit()
     #raise Exception('Action took too much time')
 #############
-'''
-def handler2(signum, frame):
-print('second alarm tripped')
-errorLogger("error: timeout. power cycle required")
-#powerCycle()
-#signal.alarm(0)
-#panelStartup()
-#cmdline(f'python /home/retcr/deployment/stationPIPanelSoftware/newPanelStart.py')
-
-
-
-''' 
-
-
     
-
 def changeGlobals(newLogDir,ser):
     global serialPort
     serialPort = ser
@@ -267,28 +200,14 @@ def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
     apFake.add_argument('-p','--port',dest="PORT",type=int,default=0)
     argsFake = apFake.parse_args()
 
-    #print(argsFake)
-
+    
     init(ser,argsFake)
 
     cmdLoop('set_livetime_enable 1', ser)
     udaqTime = cmdLoop('print_time', ser).split('\n')[0]
-    #print(udaqTime)
+
     microTime = udaqTime.split(" ")
     numTriggers = 0
-    #print(f'udaq time is {udaqTime}')
-    #print(f' edit time = {microTime[1]}')
-    #print(int(microTime[2]))
-    '''
-    for i in range(1,4):
-        time1 = f'{microTime[0]} {int(microTime[1])+i} {microTime[2]}'
-        time2 = f'{microTime[0]} {int(microTime[1])+i} {int(microTime[2])+50000}'
-        cmdLoop(f'schedule_trigout_pulse {time1}',ser,5)
-        cmdLoop(f'schedule_trigout_pulse {time2}',ser,5)
-        scheduledTriggerFile.write(f'{time1}\n{time2}\n')
-        numTriggers+=2
-    
-    '''
 
     splitTime = udaqTime.split(' ')
 
@@ -296,7 +215,10 @@ def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
     addTime = np.float64(timeVal)
     addTime = np.float64(addTime)+1
     for i in range(10):
-        addTime = np.float64(addTime)+.05
+
+        timeToNextTrigger = (10+i)/1000
+        #print(timeToNextTrigger)
+        addTime = np.float64(addTime)+timeToNextTrigger
         addString = f"{0} {str(addTime.round(6)).split('.')[0]} {str(addTime.round(6)).split('.')[1]}"
         #print(addString)
         cmdLoop(f'schedule_trigout_pulse {addString}',ser,5)
@@ -380,20 +302,7 @@ def panelIDCheck(ser):
         if(uid == j):
             print(f'panel {panelNumberList[n]} active')
             break
-    '''
    
-            
-     #comm test to read panelID from result
-    commOutLine = cmdline("python /home/retcr/deployment/stationPIPanelSoftware/hitBufferMode/commTest.py -p " + str(port))
-    if "OK" in str(commOutLine):
-                commLineSplit = str(commOutLine[0]).split('\\n')
-                for n,j in enumerate(panelIDList):
-                    if(commLineSplit[1] in j):
-                        print(f'panel {panelNumberList[n]} active at port {port}')
-                        break
-    '''
-   
-
     return panelNumberList[n]
 
 def cmdline(command):
@@ -407,18 +316,19 @@ def cmdline(command):
     return process.communicate()
 
 def closeSerial(serialPort):
-    resetUDaq(serialPort)
+    #resetUDaq(serialPort)
     cmdLoop('trigout_mode 1',serialPort)
     cmdLoop('stop_run', serialPort, 100)
     cmdLoop('set_livetime_enable 0', serialPort)
     # paranoid safety measure - set voltage back to 0
     cmdLoop('auxdac 1 0', serialPort)
     cmdLoop('auxdac 1 0', serialPort)
-
-    serialPort.flushInput()
-    serialPort.flushOutput()
+    print('im closing the serial port now')
+    #serialPort.flushInput()
+    #serialPort.flushOutput()
     serialPort.close()
     print("serial connection closed")
+
     return 0
 
 def cmdLoop(msg, serial, ntry=15, decode=True): #error log entry made
@@ -598,15 +508,7 @@ def cobsDecode(binaryDump, debug=0):
 def checkUDAQResponse(serial): #error log entry made
     serial.flushInput()
     serial.flushOutput()
-    '''
-     commOutLine = cmdline("python /home/retcr/deployment/stationPIPanelSoftware/hitBufferMode/commTest.py -p " + str(port))
-    if "OK" in str(commOutLine):
-                commLineSplit = str(commOutLine[0]).split('\\n')
-                for n,j in enumerate(panelIDList):
-                    if(commLineSplit[1] in j):
-                        print(f'panel {panelNumberList[n]} active at port {port}')
-                        break
-    '''
+   
     panel = panelIDCheck(serial)
     if panel:
         print('panels responsive continuing')
@@ -628,7 +530,6 @@ def powerCycle():
     #time.sleep(10)
     errorLogger("Info: panels power cycled")
 
-
 def errorLogger(message):
     errFile = open(logDir+"errorLog.txt","a")
     errFile.write(str(time.time_ns()) + ',' + message+'\n')
@@ -644,16 +545,18 @@ def infoLogger(message):
     infoFile.write(message+'\n')
     infoFile.close()
     
-
 def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
     print(f'\ngpio monitor for pin {pin}')
     print(f'running for {seconds} seconds')
     if 1==wait:
-        out = cmdline(f'./testGPIO {pin} {seconds} {rundir}')
-        return out
+        print('dont use')
+        #out = cmdline(f'./testGPIO {pin} {seconds} {rundir}')
+        #return out
     
     if 0 == wait:
         out = cmdlineNoWait(f'./gpioMon {pin} {rundir}',seconds)
+        print(f'gpio mon pid is {out.pid}')
+        
         print(f'gpio monitor of scheduled triggers complete, checking number of triggers registered\n')
         gpioFile = f'{rundir}/gpioMon.txt'
         #print(gpioFile)
@@ -664,12 +567,19 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
         #print(f'{numberOfLines} lines in the gpio mon file')
         
         if fullRun == 0:
-            
-            print(f'{numberOfLines} of {numTriggersExpect} scheduled triggers captured')
-            infoLogger(f'{numberOfLines} of {numTriggersExpect} scheduled triggers captured')
-            if (numberOfLines != numTriggersExpect):
+            numInFile = 0
+            with open(gpioFile,'r') as f:
+                for line in f:
+                    if 'scheduled' in line:
+                        break
+                    #print(line.strip('\n'))
+                    if len(line) > 1:
+                        numInFile+=1
+            print(f'{numInFile} of {numTriggersExpect} scheduled triggers captured')
+            infoLogger(f'{numInFile} of {numTriggersExpect} scheduled triggers captured')
+            if (numInFile != numTriggersExpect):
                 print('problem capturing triggers')
-                errorLogger(f'error: problem capturing triggers ({numberOfLines} of {numTriggersExpect} scheduled triggers captured)')
+                errorLogger(f'error: problem capturing triggers ({numInFile} of {numTriggersExpect} scheduled triggers captured)')
                 return 0
 
         if fullRun ==1:
@@ -690,7 +600,7 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
         
         return 1
 
-def cmdlineNoWait(command,waitTime = 10):
+def cmdlineNoWait(command,waitTime = 3):
 
     process = Popen(
         args=command,
@@ -698,10 +608,15 @@ def cmdlineNoWait(command,waitTime = 10):
         shell=True,
         preexec_fn=os.setsid
     )
+    #print("#########waiting on process")
+    #print(f'in cmdline pid is {process.pid}')
     time.sleep(waitTime)
     os.killpg(os.getpgid(process.pid), signal.SIGINT)
-    
-    return 0
+
+    process.terminate()
+    process.wait()
+    #print(process.communicate())
+    return process
 
 def panelStartup():
     panelUp = 0

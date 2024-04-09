@@ -145,4 +145,6 @@ int main(int nargs, char ** args)
   //fprintf(fptr,"last %d,%d.%09d\n",gpio, when.tv_sec, when.tv_nsec); 
   write(edge_fd,"none",4); 
   fclose(fptr);
+  //printf("exiting the gpioMon");
+  exit(1);
 }

@@ -15,13 +15,17 @@ import numpy as np
 import signal
 from threading import Thread
 import math
+from multiprocessing import Process
+import subprocess
+from subprocess import PIPE, Popen
+
 
 #global serialPort
 #hit.testFunction()
 
 subrunTime = 60
 
-def main(port = 0, disc = 1700, voltage = 2650):
+def main(panelToRun=12, disc = 1700, voltage = 2650):
 #def main():
     
     #arguments for the run
@@ -29,30 +33,31 @@ def main(port = 0, disc = 1700, voltage = 2650):
     ap.add_argument('-t', '--time', dest='runtime', type=int, default=3)
     ap.add_argument('-v', '--voltage', dest='voltage', type=int, default=2650)
     ap.add_argument('-d', '--disc', dest='disc', type=int, default=1710)
-    ap.add_argument('-p','--port',dest="PORT",type=int,default=0)
+    ap.add_argument('-p','--panel',dest="panel",type=int,default=0)
     args = ap.parse_args()
-
-    
-    args.PORT = port
+    if args.panel!=0:
+        panelToRun = args.panel
+    print(f'running panel {panelToRun}')
     args.disc = disc
     args.voltage = voltage
     
+    #panel 12 is connected to pin 17
+    #panel 3 is connected to pin 22
     
-   
+    id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
+    id3 = 'usb-FTDI_TTL-234X-3V3_FT76S0N6-if00-port0'
 
-    PORT = '/dev/ttyUSB' + str(args.PORT) #changing to the UART ID in the future
-    
+    if panelToRun ==12:
+        PORT = '/dev/serial/by-id/'+ id12
+        pin = 17
 
-
-    #print(disc, args.disc)
-    print(args)
-    pin = 17 #default on port 0 
-    if(args.PORT !=0):
+    if panelToRun ==3:
+        PORT = '/dev/serial/by-id/'+ id3
         pin = 22
+  
+    #print(args)
     
-    print(f'pin = {pin}')
-
-
+    print(f'gpio pin = {pin}')
 
     # voltage sanity check
     if args.voltage > 2900:
@@ -62,7 +67,6 @@ def main(port = 0, disc = 1700, voltage = 2650):
     # connect to udaq via USB
     try:
         ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_EVEN, timeout=3)
-       #ser.timeout = 1
         ser.flushInput()
         ser.flushOutput()
     except:
@@ -71,16 +75,18 @@ def main(port = 0, disc = 1700, voltage = 2650):
         sys.exit() #commented for testing
     print('serial connection made')
     signal.signal(signal.SIGINT, signal_handler)
-    global serialPort
-    serialPort = ser
-
+    global serPort
+    serPort = ser
+    global panel
     panel = hit.panelIDCheck(ser)
-    #logDirectory = hit.changeGlobals(f'panel{panel}Logs/')
-    #print(f'panel {panel} log directory for run is {logDirectory}')
-
-    for run in range(12):
+    
+    run = 0
+    #for run in range(12):
+    while True:
+        run+=1
         startTime = datetime.now()
         print(f'\n\npanel {panel} start of run = {startTime}')
+        #nextHour = startTime + timedelta(minutes=2)
         nextHour = startTime.replace(minute = 0,second=0, microsecond=0)+ timedelta(hours=1)
         print(f'panel {panel} end of run = {nextHour}')
         n = 0
@@ -89,24 +95,19 @@ def main(port = 0, disc = 1700, voltage = 2650):
     
         rundir, runfile = hit.getNextRun(panel,"runs") 
         print(f'panel {panel} run file is {runfile}')
-        #print(rundir)
+ 
         logDirectory = hit.changeGlobals(f'{rundir}/logs/',ser)
-        print(logDirectory)
-
-        #hit.makeJson(0,0,0,0,0) #checking that the error logging works
-
+  
         hit.makeJson(ser,subrunTime,args, rundir, runfile)
-
-        #hit.init(ser,args)
 
         numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
 
         scheduledTriggerFlag = hit.gpioMon(pin,2,rundir,0,numScheduledTriggers,0)
 
-        if( scheduledTriggerFlag ==0):
-            print('retrying the scheduled triggers')
-            numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
-            scheduledTriggerFlag = hit.gpioMon(pin,3,rundir,0,numScheduledTriggers,0)
+        #if( scheduledTriggerFlag ==0):
+            #print('retrying the scheduled triggers')
+            #numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
+            #scheduledTriggerFlag = hit.gpioMon(pin,3,rundir,0,numScheduledTriggers,0)
 
 ########################################
 ####### start the data run #############
@@ -114,17 +115,27 @@ def main(port = 0, disc = 1700, voltage = 2650):
         
         #open a thread for the gpio monitor 
         now = datetime.now()
-        #gpioMonTime = subrunTime+3 #for testing
-        gpioMonTime = round((nextHour - now).total_seconds() ,0)
-        #print(f'panel {panel} gpioMonTime is {gpioMonTime}')
-        gpioThread = Thread(target=hit.gpioMon, args=(pin,gpioMonTime,rundir,0,numScheduledTriggers,1,))
-        gpioThread.start()
+    
+        global gpioThread
+        commandTest = f'./gpioMon {pin} {rundir}'
+        print(f'opening gpio mon for pin {pin}')
         
+        gpioThread = Popen(
+            
+            args=commandTest,
+            shell = True,
+            stdout=subprocess.PIPE,
+            preexec_fn=os.setsid
+            
+        )
+        print(f'gpio mon open for pin {pin} pid is {gpioThread.pid}')
         
         #panel data setup
         data = [] #list to hold the data from the buffer dump
-        #bfile = open(os.path.join(rundir, runfile+'.bin'), 'wb') # .bin file containing the panel data
+
+        # .bin file containing the panel data
         with open(os.path.join(rundir, runfile+'.bin'), 'wb') as bfile:
+
             #uDAQ setup for data run
             hit.init(ser,args)
             hit.cmdLoop('set_cputrig_10mhz_enable 1',ser) #latch cputrig to 10MHz, its default but paranoia ya know
@@ -149,8 +160,7 @@ def main(port = 0, disc = 1700, voltage = 2650):
                     time.sleep(subrunTime)  #sleep the python program while the uDAQ does its thing
                     out = hit.cmdLoop('stop_run', ser, 100) #stop the subrun to read the buffer out (deadtime for panel data, but still forming triggers to central)
                     hit.getRate(ser) # print the trigger rate with duration (duration here in case you overfill the buffer if duration != subrunTime then overwrite)
-                    #nEvents = hit.getNEvents(ser)
-                    #print(f'panel {panel} number events in buffer {nEvents}')
+                
                     #dump panel data from buffer and write to the .bin
                     beginTime = time.time_ns()
                     if out is None:
@@ -166,7 +176,6 @@ def main(port = 0, disc = 1700, voltage = 2650):
 
                     data = [] #reset the data list, we've done without but should keep the python programs memory down
                     
-                    
                     endTime = time.time_ns()
                     hit.deadTimeAppend(beginTime, endTime, rundir)
                     print(f'panel {panel} buffer readout {(endTime - beginTime)/1e9} seconds')
@@ -174,7 +183,6 @@ def main(port = 0, disc = 1700, voltage = 2650):
                 else:
                     now = datetime.now()
                     remainingTime = (nextHour - now).total_seconds()
-                    #print('last subrun')
                     print(f'panel {panel} last subrun, sleeping for remaining time of {remainingTime} seconds')
                     
                     if remainingTime>5:
@@ -183,7 +191,6 @@ def main(port = 0, disc = 1700, voltage = 2650):
                         time.sleep(math.floor(remainingTime-1))  #sleep the python program while the uDAQ does its thing
                         out = hit.cmdLoop('stop_run', ser, 100) #stop the subrun to read the buffer out (deadtime for panel data, but still forming triggers to central)
                         hit.getRate(ser) # print the trigger rate with duration (duration here in case you overfill the buffer if duration != subrunTime then overwrite)
-                        #nEvents = hit.getNEvents(ser)
 
                         #dump panel data from buffer and write to the .bin
                         beginTime = time.time_ns()
@@ -202,10 +209,12 @@ def main(port = 0, disc = 1700, voltage = 2650):
                         print("sleeping to next run")
                         time.sleep(remainingTime)
                         print(f'panel {panel} wrote files to {runfile}')
+                        os.killpg(os.getpgid(gpioThread.pid), signal.SIGINT)
                         break
 
                     elif remainingTime < 0: #just in case pythonic things happen
                         print(f'panel {panel} wrote files to {runfile}')
+                        os.killpg(os.getpgid(gpioThread.pid), signal.SIGINT)
                         break
 
 
@@ -235,9 +244,23 @@ def main(port = 0, disc = 1700, voltage = 2650):
 
 
 def signal_handler(sig, frame):
-    print('You pressed Ctrl+C!')
-    hit.closeSerial(serialPort)
+    print(f'panel {panel} stop command issued, closing files and shutting down')
+    #if serialPort.isOpen():
+    
+    print('terminating gpio monitor')
+    print(f'gpioMon pid is {gpioThread.pid}')
+    
+    os.killpg(os.getpgid(gpioThread.pid), signal.SIGINT)
+    #gpioThread.wait()
+    #gpioThread.kill()
+    time.sleep(1)
+    #gpioThread.join()
+    gpioThread.terminate()
+    gpioThread.wait()
+    print('gpio mon closed')
+    hit.closeSerial(serPort)
     print('closing the serial port')
+    
     sys.exit(0)
     
 

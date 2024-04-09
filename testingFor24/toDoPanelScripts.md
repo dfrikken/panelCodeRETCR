@@ -27,13 +27,15 @@ Tests to run
 GPIO pin notes
 
     TO DO:
-        - fix c version to rising edge (write command needs length of string change 4 to 6)
+        - rewrite to seperate pins hardcoded, sometimes it seems to assign the gpio monitor to the same pin 
+            DONE- fix c version to rising edge (write command needs length of string change 4 to 6)
 
-        - write initialize function using zero bias voltage and scheduled triggers to latch time then move into run testing two panel coincidence
+            DONE- write initialize function using zero bias voltage and scheduled triggers to latch time then move into run testing two panel coincidence
 
-        - more testing with signal generator (fix ground floating)
+            DONE- more testing with signal generator (fix ground floating)
 
-        - test with all timestamps throughout run
+            DONE- test with all timestamps throughout run
+                - seems to work fine
 
  
     the pigpio package (python) seems a bit unreliable so far, using the monitor.py version from the pigpio examples. It misses quite a lot of triggers edges regardless of edge set to rising, falling or either. C version seems to be better

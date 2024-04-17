@@ -1,23 +1,29 @@
 Edits to panel python scripts:
-    1. convert all times to time.time_ns() and clean the hour cycling 
-        - with new C GPIO latch this isnt needed, only need times for buffer readouts
-    2. txt file out for buffer read out times
+
+    fix hardcoded directories
+
+    write each panel its own data taking script
+        sometimes the importing of variables isnt correct, seperate files ensures both panels are going correctly
+
+
+    DONE -1. convert all times to time.time_ns() and clean the hour cycling 
+    DONE -2. txt file out for buffer read out times
     3. error catching and file out monitoring
     4. bias voltage sweep and threshold sweep finer
         - some way to correct gain on the fly?
-    5. change /dev/ttyUSB* to device ID 
-    6. write error catching function that reacts and takes over on uDAQ going unresponsive.
+    DONE -5. change /dev/ttyUSB* to device ID 
+    DONE -6. write error catching function that reacts and takes over on uDAQ going unresponsive.
         - for now just flag the error and alert terminal that 24v power cycle is required
         - for field use need this automatic, record time this happened
-    7. Monitor function that dumps important info to log
+    DONE -7. Monitor function that dumps important info to log
 
-    #check hang up on reading (probably need a catch on serial.readline)
+    DONE -#check hang up on reading (probably need a catch on serial.readline)
         This seems to be fixed, i added a condition to flush serial output 
 
 
 
 Tests to run
-    - baud rate in default is most stable 1. Baud rate of py script testing ( is 1e6 too high??) data sheet for ttl cables say 3MBaud is highest rate
+    DONE - baud rate in default is most stable 1. Baud rate of py script testing ( is 1e6 too high??) data sheet for ttl cables say 3MBaud is highest rate
     - done works well 2. even parity test
     3. trigger out length stability testing
     4. stress test new serial comms

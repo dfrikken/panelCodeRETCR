@@ -38,12 +38,40 @@ def main(port = 0):
 
     panel = hit.panelIDCheck(ser)
 
+
+    if panel ==12:
+        #PORT = '/dev/serial/by-id/'+ id12
+        pin = 17
+
+    if panel ==3:
+        #PORT = '/dev/serial/by-id/'+ id3
+        pin = 22
+  
+    rundir = 'GPIOScheduledTriggerTest'
+
+    for i in range(50):
+        hit.cmdLoop('trigout_width 10',ser)
+        numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
+
+        scheduledTriggerFlag = hit.gpioMon(pin,1,rundir,0,numScheduledTriggers,0)
+        hit.cmdLoop('trigout_width 182',ser)
     #print(f'panel {panel} active')
 
+    command = 'pkill -f gpio'
+    process = Popen(
+        args=command,
+        stdout=subprocess.PIPE,
+        shell=True,
+        preexec_fn=os.setsid
+    )
+    #process.join()
+    print('gpio killed')
+
+
+
+
     ser.close()
-    
-    
-    
+    '''
     time.sleep(.1)
 
 
@@ -64,6 +92,12 @@ def main(port = 0):
     panel = hit.panelIDCheck(ser)
                 
     ser.close()
+    
+    
+    '''
+    
+    
+    
     
     
    

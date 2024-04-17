@@ -15,11 +15,22 @@ import numpy as np
 import signal
 from threading import Thread
 import piTesting
+import subprocess
+from subprocess import PIPE, Popen
 
 from multiprocessing import Process
 
 
 def main():
+    #kill any open gpio monitor processes
+    command = 'pkill -f gpio'
+    process = Popen(
+        args=command,
+        stdout=subprocess.PIPE,
+        shell=True,
+        preexec_fn=os.setsid
+    )
+
     sys.stderr = open('err.txt', 'w')
     global p1
     global p2
@@ -30,7 +41,7 @@ def main():
     now = datetime.now()
     print(now)
 
-    nextDay = now+ timedelta(days= 2)
+    nextDay = now+ timedelta(days= 10)
     print(nextDay)
 
     logFile = open("2PanelTestLog.txt","w")
@@ -83,7 +94,7 @@ def main():
 
 def start1():
     process = Process(
-        target=piTesting.main,args=(12,1560,2622)
+        target=piTesting.main,args=(12,3000,2860)
     )
     process.daemon = True
     process.start()
@@ -93,7 +104,7 @@ def start1():
     
 def start2():
     process1 = Process(
-        target=piTesting.main,args=(3,1570,2601)
+        target=piTesting.main,args=(3,3000,2860)
     )
     process1.daemon = True
     process1.start()
@@ -111,6 +122,14 @@ def restart(p1,p2):
     time.sleep(.5)
     p1.terminate()
     p2.terminate()
+
+    command = 'pkill -f gpio'
+    process = Popen(
+        args=command,
+        stdout=subprocess.PIPE,
+        shell=True,
+        preexec_fn=os.setsid
+    )
 
     while True:
         print("\n\n\npower cycling\n\n\n")

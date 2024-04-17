@@ -7,6 +7,7 @@ import time
 import glob
 import serial
 import datetime
+from datetime import timedelta
 import json
 from cobs import cobs
 import subprocess
@@ -19,14 +20,16 @@ global logDir
 logDir = "logs/"
 #global serialPort
 
-
-
-
 '''
 to do:
 
     normalization
+        temperature in 5 degrees C 
+            if outside redo a bias and threshold sweep?
+            would incur some dead time once per time in that temp range
+        
         bias voltage 
+
         threshold
             keep the charge info for testing the gain method
 
@@ -36,7 +39,7 @@ to do:
         run a quick comm test to check for response
             if none powercycle
     
-    logger for important steps and information with timestamps
+    DONE -logger for important steps and information with timestamps
 
     check difference between gpiomon scheduled trigs accuracy per run vs per power cycle
         - use coincident events to check
@@ -53,6 +56,7 @@ function list:
 
 changeGlobal
     - allows the controlling program to change the log directory
+    - also imports the subruntime as global
 testFunction
     - just used to test importing working correctly
 resetUDaq
@@ -95,10 +99,8 @@ errorLogger
     -log file is in the directory
 infoLogger
     -pass information to log file
-    -might not use but its here
 gpioMon
     - run the c gpio monitor
-    - has flag for waiting for process end 
 cmdlineNoWait
     - issue terminal commands but dont wait for process to complete
 panelStartup
@@ -109,16 +111,18 @@ powerCycle
 
 ########## temporary functions
 
-def testFunction():
-   
+def testFunction(subrunTime=60):
+    global srTime
+    srTime = subrunTime
     print('the definition file imported succesfully')
+    print(f'subrunTime for this run is {srTime}')
     
 def handler(signum, frame):
     print('timeout handler')
     errorLogger('error: timeout handler met')
     
-    upFlag = checkUDAQResponse(serialPort)
-    print(f'upflag is {upFlag}')
+    #upFlag = checkUDAQResponse(serialPort)
+    #print(f'upflag is {upFlag}')
     sys.exit()
     #raise Exception('Action took too much time')
 #############
@@ -128,6 +132,8 @@ def changeGlobals(newLogDir,ser):
     serialPort = ser
     global logDir
     logDir = newLogDir
+    
+
     print(f'log directory changed to {logDir}')
     if not os.path.isdir(logDir):
         print('directory does not exist, creating')
@@ -190,7 +196,7 @@ def init(ser,args): #error log entry made
             errorLogger('error initializing uDAQ, may be unresponsive')
             sys.exit()
 
-def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
+def scheduleTriggers(ser,pin,rundir,seconds=2): #error log entry made
     scheduledTriggerFile = open(rundir+"/scheduledTriggers.txt","a")
     apFake = argparse.ArgumentParser()
     apFake.add_argument('-v', '--voltage', dest='voltage', type=int, default=0,
@@ -203,6 +209,7 @@ def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
     
     init(ser,argsFake)
 
+    
     cmdLoop('set_livetime_enable 1', ser)
     udaqTime = cmdLoop('print_time', ser).split('\n')[0]
 
@@ -226,6 +233,7 @@ def scheduleTriggers(ser,pin,rundir,seconds=10): #error log entry made
         numTriggers+=1
     
     scheduledTriggerFile.close()
+    
     return numTriggers
     
 def deadTimeAppend(beginTime, endTime,rundir): #error log entry made
@@ -316,16 +324,16 @@ def cmdline(command):
     return process.communicate()
 
 def closeSerial(serialPort):
-    #resetUDaq(serialPort)
+
     cmdLoop('trigout_mode 1',serialPort)
     cmdLoop('stop_run', serialPort, 100)
     cmdLoop('set_livetime_enable 0', serialPort)
+
     # paranoid safety measure - set voltage back to 0
     cmdLoop('auxdac 1 0', serialPort)
     cmdLoop('auxdac 1 0', serialPort)
     print('im closing the serial port now')
-    #serialPort.flushInput()
-    #serialPort.flushOutput()
+
     serialPort.close()
     print("serial connection closed")
 
@@ -359,21 +367,27 @@ def cmdLoop(msg, serial, ntry=15, decode=True): #error log entry made
                 serial.flushInput()
                 serial.flushOutput()
     print('ERROR: giving up')
-    errorLogger('error in serial comms with uDAQ, checking for response')
+    errorLogger('error in serial comms with uDAQ')
+    sys.exit()
     #checkUDAQResponse(serial)
 
 def collect_output(serial, decode=True): 
     signal.signal(signal.SIGALRM, handler)
-    signal.alarm(5) #Set the parameter to the amount of seconds you want to wait
+    signal.alarm(30) #Set the parameter to the amount of seconds you want to wait
 
+    startTime = datetime.datetime.now()
+    
+    
 
     slept = False
     if decode:
         out = ''
+        endTime = startTime + timedelta(seconds=.1)
     else:
         out = bytearray()
+        endTime = startTime + timedelta(seconds=1)
     nTimes = 0
-    while True:
+    while datetime.datetime.now() < endTime:
         n = serial.inWaiting()
         if n == 0:
             if not decode:
@@ -418,7 +432,8 @@ def collect_output(serial, decode=True):
             else:
                 out.extend(serial.read(n))
             slept = False
-    signal.alarm(0)
+    #reset alarm for two subruns in case of hangups elsewhere
+    signal.alarm(srTime*2) 
     return out
 
 def getNEvents(ser): #error log entry made
@@ -549,7 +564,7 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
     print(f'\ngpio monitor for pin {pin}')
     print(f'running for {seconds} seconds')
     if 1==wait:
-        print('dont use')
+        print('dont use, depricated')
         #out = cmdline(f'./testGPIO {pin} {seconds} {rundir}')
         #return out
     
@@ -559,12 +574,9 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
         
         print(f'gpio monitor of scheduled triggers complete, checking number of triggers registered\n')
         gpioFile = f'{rundir}/gpioMon.txt'
-        #print(gpioFile)
-        #gpio = open(gpioFile,'r')
-        #numberOfLines = len(gpio.readlines())
+  
         with open(gpioFile, "rbU") as f:
             numberOfLines = sum(1 for _ in f)
-        #print(f'{numberOfLines} lines in the gpio mon file')
         
         if fullRun == 0:
             numInFile = 0
@@ -572,7 +584,7 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
                 for line in f:
                     if 'scheduled' in line:
                         break
-                    #print(line.strip('\n'))
+   
                     if len(line) > 1:
                         numInFile+=1
             print(f'{numInFile} of {numTriggersExpect} scheduled triggers captured')
@@ -580,27 +592,15 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
             if (numInFile != numTriggersExpect):
                 print('problem capturing triggers')
                 errorLogger(f'error: problem capturing triggers ({numInFile} of {numTriggersExpect} scheduled triggers captured)')
-                return 0
+                return numInFile
+            return numInFile
 
         if fullRun ==1:
-            '''
-                gpio.seek(0)
-
-            for i in gpio.readlines():
-                if( "full" in i):
-                    eventCounter=0
-                    continue
-                eventCounter+=1
-            '''
-            
             print(f'\n\n{numberOfLines - (numTriggersExpect+2)} entries in gpio monitor full run section\n\n')
-                
-
-        #gpio.close()
         
-        return 1
+            return 1
 
-def cmdlineNoWait(command,waitTime = 3):
+def cmdlineNoWait(command,waitTime ):
 
     process = Popen(
         args=command,
@@ -608,14 +608,13 @@ def cmdlineNoWait(command,waitTime = 3):
         shell=True,
         preexec_fn=os.setsid
     )
-    #print("#########waiting on process")
-    #print(f'in cmdline pid is {process.pid}')
+ 
     time.sleep(waitTime)
     os.killpg(os.getpgid(process.pid), signal.SIGINT)
 
     process.terminate()
     process.wait()
-    #print(process.communicate())
+
     return process
 
 def panelStartup():
@@ -638,7 +637,6 @@ def panelStartup():
 
 def powerCycle():
     import RPi.GPIO as gpio
-
 
     gpio.setmode(gpio.BCM)
     gpio.setup(26, gpio.OUT)

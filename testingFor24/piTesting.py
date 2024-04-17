@@ -25,8 +25,9 @@ from subprocess import PIPE, Popen
 
 subrunTime = 60
 
-def main(panelToRun=12, disc = 1700, voltage = 2650):
+def main(panelToRun, disc = 1700, voltage = 2650):
 #def main():
+    hit.testFunction(subrunTime)
     
     #arguments for the run
     ap = argparse.ArgumentParser()
@@ -55,18 +56,18 @@ def main(panelToRun=12, disc = 1700, voltage = 2650):
         PORT = '/dev/serial/by-id/'+ id3
         pin = 22
   
-    #print(args)
+    print(args)
     
     print(f'gpio pin = {pin}')
 
     # voltage sanity check
-    if args.voltage > 2900:
+    if args.voltage > 3000:
         print('ERROR: voltage setting should never need to be >2800')
         sys.exit()
 
     # connect to udaq via USB
     try:
-        ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_EVEN, timeout=3)
+        ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
         ser.flushInput()
         ser.flushOutput()
     except:
@@ -81,12 +82,12 @@ def main(panelToRun=12, disc = 1700, voltage = 2650):
     panel = hit.panelIDCheck(ser)
     
     run = 0
-    #for run in range(12):
+    #for run in range(1):
     while True:
         run+=1
         startTime = datetime.now()
         print(f'\n\npanel {panel} start of run = {startTime}')
-        #nextHour = startTime + timedelta(minutes=2)
+        #nextHour = startTime + timedelta(minutes=1)
         nextHour = startTime.replace(minute = 0,second=0, microsecond=0)+ timedelta(hours=1)
         print(f'panel {panel} end of run = {nextHour}')
         n = 0
@@ -99,20 +100,21 @@ def main(panelToRun=12, disc = 1700, voltage = 2650):
         logDirectory = hit.changeGlobals(f'{rundir}/logs/',ser)
   
         hit.makeJson(ser,subrunTime,args, rundir, runfile)
-
+        hit.cmdLoop('trigout_width 10',ser)
         numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
 
-        scheduledTriggerFlag = hit.gpioMon(pin,2,rundir,0,numScheduledTriggers,0)
-
-        #if( scheduledTriggerFlag ==0):
-            #print('retrying the scheduled triggers')
-            #numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
-            #scheduledTriggerFlag = hit.gpioMon(pin,3,rundir,0,numScheduledTriggers,0)
+        scheduledTriggerFlag = hit.gpioMon(pin,1,rundir,0,numScheduledTriggers,0)
+        
+        if( scheduledTriggerFlag < 5):
+            print('retrying the scheduled triggers')
+            hit.infoLogger('retrying the scheduled triggers')
+            numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
+            scheduledTriggerFlag = hit.gpioMon(pin,1,rundir,0,numScheduledTriggers,0)
 
 ########################################
 ####### start the data run #############
 ########################################
-        
+        hit.cmdLoop('trigout_width 182',ser)
         #open a thread for the gpio monitor 
         now = datetime.now()
     
@@ -140,6 +142,7 @@ def main(panelToRun=12, disc = 1700, voltage = 2650):
             hit.init(ser,args)
             hit.cmdLoop('set_cputrig_10mhz_enable 1',ser) #latch cputrig to 10MHz, its default but paranoia ya know
             hit.cmdLoop('set_cputrig_enable 1',ser) # enable the cpu triggers, default but see above
+            #hit.cmdLoop('trigout_mode 1',ser)
             hit.cmdLoop('trigout_mode 2',ser) # 2 = trigger formed during buffer readout, 1 = no triggers formed outside active run, 0 = no triggers
             hit.cmdLoop('set_livetime_enable 1', ser) #enable the livetime (this is the run)
         

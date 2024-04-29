@@ -21,13 +21,12 @@ import histogramMode as hm
 
 def main():
 
-    runTime = 300
-    voltage = 2750
+    runTime = 10
+    voltage = 2850
 
     panel1 = 12
     panel2 = 3
     
-
     mydatetime = datetime.now()
     mydate = str(mydatetime.date())
 
@@ -37,7 +36,7 @@ def main():
     
     for i in range(150):
         threshold= 1500 + i*10
-        print(f'running panels at voltage setting {voltage} threshold {threshold}\n')
+        print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')
         
         
         p1 = Process(
@@ -58,22 +57,18 @@ def main():
     
 
 def makeFile(panel,mydate):
-    runDir = f'runs/{mydate}'
+    runDir = f'runs/normalizationRuns/{mydate}/thresholdSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
     if os.path.exists(os.path.join(here, runDir)):
-        rateFileName = f'runs/{mydate}/panel{panel}ThresholdSweep_{mydate}.txt'
+        rateFileName = f'{runDir}/panel{panel}ThresholdSweep_{mydate}.txt'
         #print(rateFileName)
 
     else:
         #print('directory doesnt exist')
         os.makedirs(os.path.join(here, runDir))
-        rateFileName = f'runs/{mydate}/panel{panel}ThresholdSweep_{mydate}.txt'
+        rateFileName = f'{runDir}/panel{panel}ThresholdSweep_{mydate}.txt'
         #print(rateFileName)
-
-    
-    
-    return rateFileName
-    
+    return rateFileName   
 
 if __name__ == "__main__":
     main()

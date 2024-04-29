@@ -149,7 +149,8 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
 
         # write stuff out to file(s)
         rfSplit = rateFile.split('/')
-        rateDir = f'{rfSplit[0]}/{rfSplit[1]}/histogramRuns'
+        #print(f'rate file is {rfSplit}')
+        rateDir = f'{rfSplit[0]}/{rfSplit[1]}/{rfSplit[2]}/{rfSplit[3]}/histogramRuns'
         rundir, runfile = getNextRun(panelToRun,rateDir)
         for adc in range(len(hists)):
                 with open(os.path.join(

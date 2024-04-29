@@ -54,6 +54,10 @@ to do:
 '''
 function list:
 
+testFunction
+    - ensure the library has imported correctly and set the alarm for 2 subrun times
+handler
+    - handler for the alarm to log error and exit so the main script can restart if needed
 changeGlobal
     - allows the controlling program to change the log directory
     - also imports the subruntime as global
@@ -107,9 +111,17 @@ panelStartup
     - start the panels for operation after power cycling   
 powerCycle
     - cycle the 24V power to reset the uDAQ
+closest
+    - gets closest value in list
+    - used in the get threshold and voltage function
+getThresholdAndVoltage
+    - given a desired trigger rate for a panel, get the settings needed
+kelvinToCelcius
+    - convert K to C
+getPanelTemp
+    - get the panel temp for threshold sweep saving
 '''
 
-########## temporary functions
 
 def testFunction(subrunTime=60):
     global srTime
@@ -125,7 +137,6 @@ def handler(signum, frame):
     #print(f'upflag is {upFlag}')
     sys.exit()
     #raise Exception('Action took too much time')
-#############
     
 def changeGlobals(newLogDir,ser):
     global serialPort
@@ -133,11 +144,12 @@ def changeGlobals(newLogDir,ser):
     global logDir
     logDir = newLogDir
     
-
-    print(f'log directory changed to {logDir}')
-    if not os.path.isdir(logDir):
-        print('directory does not exist, creating')
-        cmdline(f'mkdir {logDir}')
+    if newLogDir != 'empty':
+        print(f'log directory changed to {logDir}')
+        
+        if not os.path.isdir(logDir):
+            print('directory does not exist, creating')
+            cmdline(f'mkdir {logDir}')
     return logDir
 
 def resetUDaq(ser): #error log entry made
@@ -251,7 +263,7 @@ def makeJson(ser,subruntime, args, rundir, runfile): #error log entry made
         # dictionary of run info to be json dumped later
         runInfo = {}
         runInfo['subruntime'] = subruntime
-        runInfo['runtime'] = args.runtime
+        #runInfo['runtime'] = args.runtime
         # the uid and temperature
         uid = cmdLoop('get_uid', ser).strip().split()
         #print(f'uid is {uid}')
@@ -460,6 +472,10 @@ def getRate(ser): #error log entry made
 
 def getNextRun(panel, runsdir='runs'): #error log entry made
     try:
+        mydatetime = datetime.datetime.now()
+        mydate = str(mydatetime.date())
+        runsdir = f'runs/{mydate}/hitBufferRuns'
+        print(f'run directory is {runsdir}')
         here = os.path.dirname(os.path.abspath(__file__))
         if os.path.exists(os.path.join(here, runsdir)):
             lastrun = sorted(glob.glob(os.path.join(here, runsdir, f'panel_{panel}_run_*')))
@@ -650,4 +666,70 @@ def powerCycle():
     gpio.output(26, gpio.LOW)
     time.sleep(.5)
 
+def closest(list, Number):
+    aux = []
+    for valor in list:
+        aux.append(abs(Number-valor))
+
+    return aux.index(min(aux))
+
+def getThresholdAndVoltage(panel, trigRate):
     
+    print(f'pulling threshold and voltage settings for panel {panel}')
+    #temp = float(cmdLoop('getmon', serialPort).strip().split()[1])
+    #print(f'temperature is {kelvinToCelcius(temp)} celcius')
+    path = '/home/retcr/deployment/stationPIPanelSoftware/testingFor24/runs/normalizationRuns'
+    dir_list = os.listdir(path)
+    #print(dir_list)
+    fileList = []
+    for i in dir_list:
+        if '2024' in i:
+            #print(i)
+            fileList.append(i)
+
+    fileList.sort()
+    myFile = f'{path}/{fileList[-1]}/thresholdSweeps/panel{panel}ThresholdSweep_{fileList[-1]}.txt'
+    #print(myFile)
+    with open(myFile, 'r') as f:
+        settingsList = []
+        settingsList = f.readlines()
+
+    rateList = []
+    for n,j in enumerate(settingsList):
+        split = j.split(',')
+        if n > 1:
+            
+            rateList.append(float(split[2]))
+    
+    #print(rateList)
+    myIndex = closest(rateList,trigRate)
+    print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
+    #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
+    return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
+    
+
+def kelvinToCelcius(kelvin):
+    celcius = kelvin - 273.15
+    return round(celcius,0)
+
+def getPanelTemp(panelToRun):
+    id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
+    id3 = 'usb-FTDI_TTL-234X-3V3_FT76S0N6-if00-port0'
+    if panelToRun ==12:
+        PORT = '/dev/serial/by-id/'+ id12
+
+    if panelToRun ==3:
+        PORT = '/dev/serial/by-id/'+ id3
+
+    try:
+        ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
+        ser.flushInput()
+        ser.flushOutput()
+    except:
+        print("ERROR: is the USB cable connected?")
+        hit.errorLogger("FATAL ERROR error connecting to uDAQ over serial")
+        sys.exit() #commented for testing
+
+    temp = float(cmdLoop('getmon', ser).strip().split()[1])
+    ser.close()
+    return kelvinToCelcius(temp)

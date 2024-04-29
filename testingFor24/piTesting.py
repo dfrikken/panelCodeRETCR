@@ -25,8 +25,9 @@ from subprocess import PIPE, Popen
 
 subrunTime = 60
 
-def main(panelToRun, disc = 1700, voltage = 2650):
+def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100):
 #def main():
+    subrunTime = int(3200/triggerRate)
     hit.testFunction(subrunTime)
     
     #arguments for the run

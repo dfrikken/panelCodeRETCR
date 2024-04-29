@@ -20,61 +20,28 @@ import subprocess
 from subprocess import PIPE, Popen
 
 def main(port = 0):
-    hit.testFunction()
+    hit.testFunction(300)
+
+    panel = 3
+    #temp3 = hit.getPanelTemp(panel)
+    #print(temp3)
+
+    settingsList = hit.getThresholdAndVoltage(panel,30)
+    print(settingsList)
     
-    id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
-    PORT = '/dev/serial/by-id/'+ id12
-    try:
-        ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_EVEN, timeout=3)
-        #ser.timeout = 1
-        #ser.flushInput()
-        #ser.flushOutput()
-    except:
-        print("ERROR: is the USB cable connected?")
-        hit.errorLogger("FATAL ERROR error connecting to uDAQ over serial")
-        sys.exit() #commented for testing
-    print('serial connection made')
+
+    panel = 12
+    #temp3 = hit.getPanelTemp(panel)
+    #print(temp3)
+
+    settingsList = hit.getThresholdAndVoltage(panel,30)
+    print(settingsList)
 
 
-    panel = hit.panelIDCheck(ser)
+ 
+    
 
-
-    if panel ==12:
-        #PORT = '/dev/serial/by-id/'+ id12
-        pin = 17
-
-    if panel ==3:
-        #PORT = '/dev/serial/by-id/'+ id3
-        pin = 22
-  
-    rundir = 'GPIOScheduledTriggerTest'
-
-    for i in range(50):
-        hit.cmdLoop('trigout_width 10',ser)
-        numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
-
-        scheduledTriggerFlag = hit.gpioMon(pin,1,rundir,0,numScheduledTriggers,0)
-        hit.cmdLoop('trigout_width 182',ser)
-    #print(f'panel {panel} active')
-
-    command = 'pkill -f gpio'
-    process = Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        shell=True,
-        preexec_fn=os.setsid
-    )
-    #process.join()
-    print('gpio killed')
-
-
-
-
-    ser.close()
     '''
-    time.sleep(.1)
-
-
     id3 = 'usb-FTDI_TTL-234X-3V3_FT76S0N6-if00-port0'
     PORT = '/dev/serial/by-id/'+ id3
     try:

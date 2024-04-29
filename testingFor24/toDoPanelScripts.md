@@ -3,7 +3,10 @@ Edits to panel python scripts:
     fix hardcoded directories
 
     write each panel its own data taking script
-        sometimes the importing of variables isnt correct, seperate files ensures both panels are going correctly
+        - sometimes the importing of variables isnt correct, seperate files ensures both panels are going correctly
+        - check the changeGlobals area this may be the issue?
+
+    finish data timestamp fixing for coincidence finding with new gpio mon 
 
 
     DONE -1. convert all times to time.time_ns() and clean the hour cycling 

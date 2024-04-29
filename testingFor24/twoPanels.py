@@ -20,6 +20,11 @@ from subprocess import PIPE, Popen
 
 from multiprocessing import Process
 
+################
+global triggerRate
+triggerRate = 100
+##################
+
 
 def main():
     #kill any open gpio monitor processes
@@ -34,8 +39,12 @@ def main():
     sys.stderr = open('err.txt', 'w')
     global p1
     global p2
-    p1 = start1()
-    p2 = start2()
+    settingsList1 = hit.getThresholdAndVoltage(12,triggerRate)
+    settingsList2 = hit.getThresholdAndVoltage(3,triggerRate)
+
+    print(triggerRate)
+    p1 = start1(settingsList1,triggerRate)
+    p2 = start2(settingsList2,triggerRate)
     
     signal.signal(signal.SIGINT, signal_handler)
     now = datetime.now()
@@ -64,9 +73,9 @@ def main():
             print(f'p2 {p2.is_alive()}')
             restart(p1,p2)
             time.sleep(1)
-            p1 = start1()
+            p1 = start1(settingsList1,triggerRate)
             time.sleep(.1)
-            p2 = start2()
+            p2 = start2(settingsList2,triggerRate)
             
 
     print("data taking test complete")
@@ -92,9 +101,12 @@ def main():
     return
 
 
-def start1():
+def start1(settingsList,triggerRate):
+
+    
+
     process = Process(
-        target=piTesting.main,args=(12,3000,2860)
+        target=piTesting.main,args=(12,settingsList[0],settingsList[1],triggerRate)
     )
     process.daemon = True
     process.start()
@@ -102,9 +114,10 @@ def start1():
     print(f'process pid is {process.pid}')
     return process
     
-def start2():
+def start2(settingsList,triggerRate):
+    settingsList = hit.getThresholdAndVoltage(3,triggerRate)
     process1 = Process(
-        target=piTesting.main,args=(3,3000,2860)
+        target=piTesting.main,args=(3,settingsList[0],settingsList[1],triggerRate)
     )
     process1.daemon = True
     process1.start()

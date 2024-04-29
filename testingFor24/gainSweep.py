@@ -21,7 +21,7 @@ import histogramMode as hm
 
 def main():
 
-    runTime = 300
+    runTime = 30
     threshold = 1500
 
     panel1 = 12
@@ -35,8 +35,8 @@ def main():
     p2Filename = makeFile(panel2,mydate)
     print('files made, running histogram mode for gain sweep')
     
-    for i in range(100):
-        voltage = 2850 - i*3
+    for i in range(20):
+        voltage = 2900 - i*5
         print(f'running panels at voltage setting {voltage}\n')
         
         
@@ -58,27 +58,19 @@ def main():
     
 
 def makeFile(panel,mydate):
-    runDir = f'runs/{mydate}'
+    runDir = f'runs/normalizationRuns/{mydate}/voltageSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
     if os.path.exists(os.path.join(here, runDir)):
-        rateFileName = f'runs/{mydate}/panel{panel}VoltageSweep_{mydate}.txt'
+        rateFileName = f'{runDir}/panel{panel}VoltageSweep_{mydate}.txt'
         #print(rateFileName)
 
     else:
         #print('directory doesnt exist')
         os.makedirs(os.path.join(here, runDir))
-        rateFileName = f'runs/{mydate}/panel{panel}VoltageSweep_{mydate}.txt'
+        rateFileName = f'{runDir}/panel{panel}VoltageSweep_{mydate}.txt'
         #print(rateFileName)
-
-    
     
     return rateFileName
-    
-    
-    
-   
-
-
 
 if __name__ == "__main__":
     main()

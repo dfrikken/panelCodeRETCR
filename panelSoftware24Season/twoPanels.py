@@ -39,8 +39,12 @@ def main():
     sys.stderr = open('err.txt', 'w')
     global p1
     global p2
-    settingsList1 = hit.getThresholdAndVoltage(12,triggerRate)
-    settingsList2 = hit.getThresholdAndVoltage(3,triggerRate)
+    global panel1
+    global panel2
+    panel1 = os.environ['panel1']
+    panel2 = os.environ['panel2']
+    settingsList1 = hit.getThresholdAndVoltage(panel1,triggerRate)
+    settingsList2 = hit.getThresholdAndVoltage(panel2,triggerRate)
 
     print(triggerRate)
     p1 = start1(settingsList1,triggerRate)
@@ -106,7 +110,7 @@ def start1(settingsList,triggerRate):
     
 
     process = Process(
-        target=piTesting.main,args=(12,settingsList[0],settingsList[1],triggerRate)
+        target=piTesting.main,args=(panel1,settingsList[0],settingsList[1],triggerRate)
     )
     process.daemon = True
     process.start()
@@ -115,9 +119,9 @@ def start1(settingsList,triggerRate):
     return process
     
 def start2(settingsList,triggerRate):
-    settingsList = hit.getThresholdAndVoltage(3,triggerRate)
+    
     process1 = Process(
-        target=piTesting.main,args=(3,settingsList[0],settingsList[1],triggerRate)
+        target=piTesting.main,args=(panel2,settingsList[0],settingsList[1],triggerRate)
     )
     process1.daemon = True
     process1.start()

@@ -46,7 +46,8 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100):
     #panel 12 is connected to pin 17
     #panel 3 is connected to pin 22
     
-    id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
+    '''
+     id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
     id3 = 'usb-FTDI_TTL-234X-3V3_FT76S0N6-if00-port0'
 
     if panelToRun ==12:
@@ -56,6 +57,18 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100):
     if panelToRun ==3:
         PORT = '/dev/serial/by-id/'+ id3
         pin = 22
+    
+    '''
+
+    if panelToRun == os.environ['panel1']:
+            id = os.environ['panel1ID']
+            pin="fix this"
+
+    if panelToRun == os.environ['panel2']:
+            id = os.environ['panel2ID']
+            pin = "fix this"
+
+    PORT = '/dev/serial/by-id/'+id
   
     print(args)
     

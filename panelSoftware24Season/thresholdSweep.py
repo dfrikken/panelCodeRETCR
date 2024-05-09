@@ -24,8 +24,8 @@ def main():
     runTime = 10
     voltage = 2800
 
-    panel1 = 12
-    panel2 = 3
+    panel1 = os.environ['panel1']
+    panel2 = os.environ['panel2']
     
     mydatetime = datetime.now()
     mydate = str(mydatetime.date())

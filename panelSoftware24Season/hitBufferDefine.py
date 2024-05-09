@@ -431,7 +431,7 @@ def collect_output(serial, decode=True):
                     
                     
                 if not line: 
-                    print('in not line')
+                    #print('in not line')
                     break
                 out += line.decode()
                 #print(out)
@@ -548,19 +548,6 @@ def checkUDAQResponse(serial): #error log entry made
         print(f'error in panel, panel non-responsive, may need power cycle')
         return 0
 
-def powerCycle():
-
-    #placeholder for now to be filled in later
-    #cycle 24V power
-    #newPanelStart 
-    #restart both panels' data scripts
-    print("power cycling the 24V and restarting panels ")
-    cmdline('python /home/retcr/deployment/powerCycle.py')
-    #time.sleep(5)
-    #cmdline(f'python3 /home/retcr/deployment/stationPIPanelSoftware/newPanelStart.py')
-    #time.sleep(10)
-    errorLogger("Info: panels power cycled")
-
 def errorLogger(message):
     errFile = open(logDir+"errorLog.txt","a")
     errFile.write(str(time.time_ns()) + ',' + message+'\n')
@@ -652,18 +639,19 @@ def panelStartup():
         return 1
 
 def powerCycle():
+    # gpio pin 2 controls the 24V power
     import RPi.GPIO as gpio
 
     gpio.setmode(gpio.BCM)
-    gpio.setup(26, gpio.OUT)
+    gpio.setup(2, gpio.OUT)
 
     print("high = off")
-    gpio.output(26, gpio.HIGH)
+    gpio.output(2, gpio.HIGH)
 
     time.sleep(.1)
 
     print("low = on")
-    gpio.output(26, gpio.LOW)
+    gpio.output(2, gpio.LOW)
     time.sleep(.5)
 
 def closest(list, Number):
@@ -733,3 +721,41 @@ def getPanelTemp(panelToRun):
     temp = float(cmdLoop('getmon', ser).strip().split()[1])
     ser.close()
     return kelvinToCelcius(temp)
+
+'''
+def getPanelSerialID(panel):
+
+    arr = os.listdir('/dev/serial/by-id/')
+    id1 = arr[0]
+    id2 = arr[1]
+    PORT = '/dev/serial/by-id/'+ id1
+    #print(PORT)
+	# connect to udaq via USB
+    ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE,timeout=3,stopbits=1)
+    
+    panel1 = panelIDCheck(ser)
+    
+   
+    ser.close()
+    time.sleep(.5)
+    PORT = '/dev/serial/by-id/'+ id2
+    
+        # connect to udaq via USB
+
+    ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE,timeout=3,stopbits=1)
+    
+    panel2 = panelIDCheck(ser)
+    ser.close()
+    time.sleep(.5)
+   
+
+    if int(panel) == panel1:
+        return id1
+    elif int(panel) == panel2:
+        return id2
+    else:
+
+
+        errmess = 'panel not found'
+        return errmess
+'''

@@ -33,7 +33,8 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         print(f'running panel {panelToRun}')
         #args.disc = disc
         #args.voltage = voltage
-           
+        '''
+
         id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
         id3 = 'usb-FTDI_TTL-234X-3V3_FT76S0N6-if00-port0'
 
@@ -42,6 +43,16 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
             
         if panelToRun ==3:
             PORT = '/dev/serial/by-id/'+ id3
+        
+        '''
+
+        if panelToRun == os.environ['panel1']:
+               id = os.environ['panel1ID']
+
+        if panelToRun == os.environ['panel2']:
+               id = os.environ['panel2ID']
+
+        PORT = '/dev/serial/by-id/'+id
     
         #print(args)
         # voltage sanity check
@@ -55,7 +66,8 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
             ser.flushInput()
             ser.flushOutput()
         except:
-            print("ERROR: is the USB cable connected?")
+        
+            print("ERROR: (histogramMode.py) is the USB cable connected?")
             #hit.errorLogger("FATAL ERROR error connecting to uDAQ over serial")
             sys.exit() #commented for testing
             
@@ -105,7 +117,7 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         # start and stop the run here
         hit.cmdLoop('set_livetime_enable 1', ser)
         hit.cmdLoop('run 1 0 0', ser)
-        #print('waiting {0} seconds...'.format(args.runtime))
+        print('waiting {0} seconds...'.format(args.runtime))
         time.sleep((args.runtime))
         hit.cmdLoop('stop_run', ser, 5)
         hit.cmdLoop('set_livetime_enable 0', ser)
@@ -188,6 +200,7 @@ def closeSerial(serial):
         serial.flushInput()
         serial.flushOutput()
         serial.close()
+        print('serial closed')
 
         
 # try the command ntry times

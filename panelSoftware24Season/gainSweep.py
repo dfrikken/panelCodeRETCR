@@ -24,8 +24,8 @@ def main():
     runTime = 30
     threshold = 1500
 
-    panel1 = 12
-    panel2 = 3
+    panel1 = os.environ['panel1']
+    panel2 = os.environ['panel2']
     
 
     mydatetime = datetime.now()
@@ -35,7 +35,7 @@ def main():
     p2Filename = makeFile(panel2,mydate)
     print('files made, running histogram mode for gain sweep')
     
-    for i in range(100):
+    for i in range(50):
         voltage = 2800 - i*5
         print(f'running panels at voltage setting {voltage}\n')
         

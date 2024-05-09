@@ -38,7 +38,8 @@ def main(port = 0):
     print(settingsList)
 
 
- 
+ usb-FTDI_TTL-234X-3V3_FT76GULV-if00-port0
+usb-FTDI_TTL-234X-3V3_FT76S1SV-if00-port0
     
 
     '''
@@ -68,7 +69,48 @@ def main(port = 0):
     
     
    
-
-
 if __name__ == "__main__":
     main()
+
+
+
+#!/usr/bin/env python
+
+
+import sys
+import os
+import argparse
+import time
+import glob
+import serial
+from datetime import datetime, timedelta
+import json
+from cobs import cobs
+import hitBufferDefine as hit
+import numpy as np
+import signal
+from threading import Thread
+import math
+from multiprocessing import Process
+import subprocess
+from subprocess import PIPE, Popen
+
+def main():
+        hit.testFunction(300)
+
+        #hit.powerCycle()
+
+        #time.sleep(1)
+        #hit.panelStartup()
+        id1 = 'usb-FTDI_TTL-234X-3V3_FT76GULV-if00-port0'
+        id2 - 'usb-FTDI_TTL-234X-3V3_FT76S1SV-if00-port0'
+
+        PORT = '/dev/serial/by-id/'+ id1
+        # connect to udaq via USB
+        ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
+        ser.flushInput()
+        ser.flushOutput()
+        panel = hit.panelIDCheck(ser)
+        print(panel)
+
+        #id1 = 'usb-FTDI_TTL-234X-3V3_FT76GULV-if00-port0'

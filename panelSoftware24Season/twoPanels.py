@@ -14,7 +14,7 @@ import hitBufferDefine as hit
 import numpy as np
 import signal
 from threading import Thread
-import piTesting
+import singlePanelHitBufferMode as singlePanelHitBufferMode
 import subprocess
 from subprocess import PIPE, Popen
 
@@ -23,10 +23,24 @@ from multiprocessing import Process
 ################
 global triggerRate
 triggerRate = 100
+
+global useGPIO
+useGPIO = 1
 ##################
 
 
 def main():
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-t', '--trigRate', dest='trigRate', type=int, default=0)
+    args = ap.parse_args()
+
+    if args.trigRate !=0:
+        triggerRate = args.trigRate
+
+    print(f'running both panels with trigger rate {triggerRate}')
+    
+
     #kill any open gpio monitor processes
     command = 'pkill -f gpio'
     process = Popen(
@@ -60,6 +74,7 @@ def main():
     logFile = open("2PanelTestLog.txt","w")
     
     while datetime.now() < nextDay:
+        time.sleep(10)
         
         if p1.is_alive() and p2.is_alive():
             continue
@@ -110,7 +125,7 @@ def start1(settingsList,triggerRate):
     
 
     process = Process(
-        target=piTesting.main,args=(panel1,settingsList[0],settingsList[1],triggerRate)
+        target=singlePanelHitBufferMode.main,args=(panel1,settingsList[0],settingsList[1],triggerRate,useGPIO)
     )
     process.daemon = True
     process.start()
@@ -121,7 +136,7 @@ def start1(settingsList,triggerRate):
 def start2(settingsList,triggerRate):
     
     process1 = Process(
-        target=piTesting.main,args=(panel2,settingsList[0],settingsList[1],triggerRate)
+        target=singlePanelHitBufferMode.main,args=(panel2,settingsList[0],settingsList[1],triggerRate,useGPIO)
     )
     process1.daemon = True
     process1.start()

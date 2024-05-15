@@ -9,19 +9,15 @@
 #include <string.h>
 #include <poll.h> 
 
-// to do 
-
-    // file writing function to hold timestamps
-
 //to use run these 
 // gcc gpioMonitor.c -o gpioNMonitor
 // chmod +x gpioNMonitor
 // ./gpioNMonitor
 
 
-// two panels currently on 17 and 22
-int gpio = 17;
-//int gpio = 22;
+// two panels currently on 13 and 26
+int gpio = 13;
+//int gpio = 26;
 
 static char edge_path[512]; 
 static char val_path[512]; 

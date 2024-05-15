@@ -666,12 +666,12 @@ def getThresholdAndVoltage(panel, trigRate):
     print(f'pulling threshold and voltage settings for panel {panel}')
     #temp = float(cmdLoop('getmon', serialPort).strip().split()[1])
     #print(f'temperature is {kelvinToCelcius(temp)} celcius')
-    path = '/home/retcr/deployment/stationPIPanelSoftware/testingFor24/runs/normalizationRuns'
+    path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     dir_list = os.listdir(path)
     #print(dir_list)
     fileList = []
     for i in dir_list:
-        if '2024' in i:
+        if '202' in i:
             #print(i)
             fileList.append(i)
 

@@ -22,7 +22,7 @@ import histogramMode as hm
 def main():
 
     runTime = 10
-    voltage = 2800
+    voltage = 2700
 
     panel1 = os.environ['panel1']
     panel2 = os.environ['panel2']
@@ -34,8 +34,8 @@ def main():
     p2Filename = makeFile(panel2,mydate)
     print('files made, running histogram mode for threshold sweep')
     
-    for i in range(150):
-        threshold= 1500 + i*10
+    for i in range(30):
+        threshold= 3000 - i*10
         print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')
         
         

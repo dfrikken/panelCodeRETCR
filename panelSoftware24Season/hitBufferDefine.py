@@ -232,7 +232,8 @@ def scheduleTriggers(ser,pin,rundir,seconds=2): #error log entry made
 
     timeVal = splitTime[1] +'.'+ splitTime[2]
     addTime = np.float64(timeVal)
-    addTime = np.float64(addTime)+1
+    addTime = np.float64(addTime)+1.5
+    #print(addTime)
     for i in range(10):
 
         timeToNextTrigger = (10+i)/1000
@@ -245,6 +246,7 @@ def scheduleTriggers(ser,pin,rundir,seconds=2): #error log entry made
         numTriggers+=1
     
     scheduledTriggerFile.close()
+    #print('trigs scheduled')
     
     return numTriggers
     
@@ -572,7 +574,7 @@ def gpioMon(pin, seconds,rundir, wait = 1, numTriggersExpect = 0,fullRun = 0):
         #return out
     
     if 0 == wait:
-        out = cmdlineNoWait(f'./gpioMon {pin} {rundir}',seconds)
+        out = cmdlineNoWait(f'/home/retcr/deployment/panelSoftware24Season/gpioMon {pin} {rundir}',seconds)
         print(f'gpio mon pid is {out.pid}')
         
         print(f'gpio monitor of scheduled triggers complete, checking number of triggers registered\n')
@@ -648,7 +650,7 @@ def powerCycle():
     print("high = off")
     gpio.output(2, gpio.HIGH)
 
-    time.sleep(.1)
+    time.sleep(.3)
 
     print("low = on")
     gpio.output(2, gpio.LOW)
@@ -701,13 +703,13 @@ def kelvinToCelcius(kelvin):
     return round(celcius,0)
 
 def getPanelTemp(panelToRun):
-    id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
-    id3 = 'usb-FTDI_TTL-234X-3V3_FT76S0N6-if00-port0'
-    if panelToRun ==12:
-        PORT = '/dev/serial/by-id/'+ id12
+    if panelToRun == os.environ['panel1']:
+        id = os.environ['panel1ID']
+        
+    if panelToRun == os.environ['panel2']:
+        id = os.environ['panel2ID']
 
-    if panelToRun ==3:
-        PORT = '/dev/serial/by-id/'+ id3
+    PORT = '/dev/serial/by-id/'+id
 
     try:
         ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
@@ -715,47 +717,11 @@ def getPanelTemp(panelToRun):
         ser.flushOutput()
     except:
         print("ERROR: is the USB cable connected?")
-        hit.errorLogger("FATAL ERROR error connecting to uDAQ over serial")
+        errorLogger("FATAL ERROR error connecting to uDAQ over serial")
         sys.exit() #commented for testing
 
     temp = float(cmdLoop('getmon', ser).strip().split()[1])
     ser.close()
     return kelvinToCelcius(temp)
 
-'''
-def getPanelSerialID(panel):
 
-    arr = os.listdir('/dev/serial/by-id/')
-    id1 = arr[0]
-    id2 = arr[1]
-    PORT = '/dev/serial/by-id/'+ id1
-    #print(PORT)
-	# connect to udaq via USB
-    ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE,timeout=3,stopbits=1)
-    
-    panel1 = panelIDCheck(ser)
-    
-   
-    ser.close()
-    time.sleep(.5)
-    PORT = '/dev/serial/by-id/'+ id2
-    
-        # connect to udaq via USB
-
-    ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE,timeout=3,stopbits=1)
-    
-    panel2 = panelIDCheck(ser)
-    ser.close()
-    time.sleep(.5)
-   
-
-    if int(panel) == panel1:
-        return id1
-    elif int(panel) == panel2:
-        return id2
-    else:
-
-
-        errmess = 'panel not found'
-        return errmess
-'''

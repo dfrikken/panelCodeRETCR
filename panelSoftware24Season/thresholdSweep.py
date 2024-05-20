@@ -22,8 +22,8 @@ import histogramMode as hm
 def main():
 
     runTime = 10
-    voltage = 2700
-
+    panel1Voltage = 2770
+    panel2Voltage = 2770
     panel1 = os.environ['panel1']
     panel2 = os.environ['panel2']
     
@@ -34,17 +34,17 @@ def main():
     p2Filename = makeFile(panel2,mydate)
     print('files made, running histogram mode for threshold sweep')
     
-    for i in range(30):
+    for i in range(100):
         threshold= 3000 - i*10
-        print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')
+        #print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')
         
         
         p1 = Process(
-        target=hm.main,args=(0,panel1,threshold,voltage,runTime,p1Filename)
+        target=hm.main,args=(0,panel1,threshold,panel1Voltage,runTime,p1Filename)
         )
         p1.daemon = True
         p2 = Process(
-        target=hm.main,args=(0,panel2,threshold,voltage,runTime,p2Filename)
+        target=hm.main,args=(0,panel2,threshold,panel2Voltage,runTime,p2Filename)
         )
         p2.daemon = True
 

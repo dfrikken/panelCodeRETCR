@@ -43,23 +43,6 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
     print(f'running panel {panelToRun}')
     args.disc = disc
     args.voltage = voltage
-    
-    #panel 12 is connected to pin 17
-    #panel 3 is connected to pin 22
-    
-    '''
-     id12 = 'usb-FTDI_TTL-234X-3V3_FT76I7QF-if00-port0'
-    id3 = 'usb-FTDI_TTL-234X-3V3_FT76S0N6-if00-port0'
-
-    if panelToRun ==12:
-        PORT = '/dev/serial/by-id/'+ id12
-        pin = 17
-
-    if panelToRun ==3:
-        PORT = '/dev/serial/by-id/'+ id3
-        pin = 22
-    
-    '''
 
     if panelToRun == os.environ['panel1']:
             id = os.environ['panel1ID']
@@ -92,10 +75,13 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
         sys.exit() #commented for testing
     print('serial connection made')
     signal.signal(signal.SIGINT, signal_handler)
+    print('signal handler made')
     global serPort
     serPort = ser
     global panel
-    panel = hit.panelIDCheck(ser)
+    panel = panelToRun
+
+    #panel = hit.panelIDCheck(ser)
     
     run = 0
     #for run in range(1):
@@ -120,13 +106,13 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
             hit.cmdLoop('trigout_width 10',ser)
             numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
 
-            scheduledTriggerFlag = hit.gpioMon(pin,1,rundir,0,numScheduledTriggers,0)
+            scheduledTriggerFlag = hit.gpioMon(pin,2,rundir,0,numScheduledTriggers,0)
             
             if( scheduledTriggerFlag < 5):
                 print('retrying the scheduled triggers')
                 hit.infoLogger('retrying the scheduled triggers')
                 numScheduledTriggers = hit.scheduleTriggers(ser,pin,rundir,10)
-                scheduledTriggerFlag = hit.gpioMon(pin,1,rundir,0,numScheduledTriggers,0)
+                scheduledTriggerFlag = hit.gpioMon(pin,2,rundir,0,numScheduledTriggers,0)
 
 ########################################
 ####### start the data run #############
@@ -136,7 +122,7 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
         now = datetime.now()
         if useGPIO:
             global gpioThread
-            commandTest = f'./gpioMon {pin} {rundir}'
+            commandTest = f'/home/retcr/deployment/panelSoftware24Season/gpioMon {pin} {rundir}'
             print(f'opening gpio mon for pin {pin}')
             
             gpioThread = Popen(
@@ -178,7 +164,7 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
                     hit.cmdLoop(f'run 1 3500 0', ser, 5) #enable "run" in this case a subrun. subrun lasts till 'stop_run' command issued
                     print(f'panel {panel} sleeping for {subrunTime} seconds to form the subrun')
                     time.sleep(subrunTime)  #sleep the python program while the uDAQ does its thing
-                    out = hit.cmdLoop('stop_run', ser, 100) #stop the subrun to read the buffer out (deadtime for panel data, but still forming triggers to central)
+                    out = hit.cmdLoop('stop_run', ser, 100) #stop the subrun to read the buffer out (deadtime for panel data, but still forming triggers to central, and gpio timestamps made)
                     hit.getRate(ser) # print the trigger rate with duration (duration here in case you overfill the buffer if duration != subrunTime then overwrite)
                 
                     #dump panel data from buffer and write to the .bin
@@ -194,7 +180,7 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
                         for dump in data:
                             bfile.write(hit.cobsDecode(dump))
 
-                    data = [] #reset the data list, we've done without but should keep the python programs memory down
+                    data = [] #reset the data list, we've done without but will keep the python programs memory down
                     
                     endTime = time.time_ns()
                     hit.deadTimeAppend(beginTime, endTime, rundir)

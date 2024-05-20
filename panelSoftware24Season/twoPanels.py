@@ -20,16 +20,18 @@ from subprocess import PIPE, Popen
 
 from multiprocessing import Process
 
-################
-global triggerRate
-triggerRate = 100
 
-global useGPIO
-useGPIO = 1
-##################
 
 
 def main():
+    #time.sleep(1)
+    ################
+    global triggerRate
+    triggerRate = 300
+
+    global useGPIO
+    useGPIO = 1
+    ##################
 
     ap = argparse.ArgumentParser()
     ap.add_argument('-t', '--trigRate', dest='trigRate', type=int, default=0)

@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+import os
+
+'''
+temp = -27
+normFilePath = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
+
+dir_list = os.listdir(normFilePath)
+
+fileList = []
+for i in dir_list:
+    fileList.append(i)
+    if '202' not in i:
+        bottom = int(i.split('_')[0])
+        top = int(i.split('_')[1])
+        if temp in range(bottom,top):
+            #print(i)
+            tempDir = i
+            tempRange = i
+            break
+
+tempDir = os.path.join(normFilePath, tempDir)
+
+print(tempDir)
+
+'''
+path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
+here = os.path.dirname(path)
+print(here)
+for i in range(-40,10):
+    if i%5 ==0:
+        print(f'{i}_{i+5}')
+        dirName = f'{i}_{i+5}'
+        test = os.path.join(here, dirName)
+        print(test)
+        os.makedirs(os.path.join(here, dirName))
+

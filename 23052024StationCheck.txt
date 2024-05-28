@@ -24,7 +24,8 @@ Checking the stations to see how the boot startup is working
     codys errored out on start (socket connection failed: Connection Refused)
     codys data script is not writing the files correctly (needs checking)
     cody start fix script done
-    
+*****cody not responding
+
 45:
     station restarted 0357 UTC
     panels operational
@@ -39,4 +40,4 @@ Checking the stations to see how the boot startup is working
 
     codys errored out on start (socket connection failed: Connection Refused)
     codys data script is not writing the files correctly (needs checking)
-    
+    cody start fix script done

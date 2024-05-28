@@ -3,7 +3,7 @@
 '''
 TO DO:
         write in error correction to power cycle and restart inside this program if serial comm is lost to panel
-        
+
 
 
 '''
@@ -168,10 +168,12 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         mytime = str(mydatetime.time().strftime("%H:%M:%S"))
 
         # write stuff out to file(s)
+        #print(f'rateFile is {rateFile}')
         rfSplit = rateFile.split('/')
         #print(f'rate file is {rfSplit}')
-        rateDir = f'{rfSplit[0]}/{rfSplit[1]}/{rfSplit[2]}/{rfSplit[3]}/histogramRuns'
+        rateDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{rfSplit[7]}/{rfSplit[8]}/histogramRuns'
         rundir, runfile = getNextRun(panelToRun,rateDir)
+        #print(f'rundir is {rundir}')
         for adc in range(len(hists)):
                 with open(os.path.join(
                                 rundir,

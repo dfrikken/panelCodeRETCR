@@ -642,18 +642,20 @@ def panelStartup():
 
 def powerCycle():
     # gpio pin 2 controls the 24V power
+    pin = int(os.environ['powerPin'])
+    print(f'power pin is {pin}')
     import RPi.GPIO as gpio
 
     gpio.setmode(gpio.BCM)
-    gpio.setup(2, gpio.OUT)
+    gpio.setup(pin, gpio.OUT)
 
     print("high = off")
-    gpio.output(2, gpio.HIGH)
+    gpio.output(pin, gpio.HIGH)
 
     time.sleep(.3)
 
     print("low = on")
-    gpio.output(2, gpio.LOW)
+    gpio.output(pin, gpio.LOW)
     time.sleep(.5)
 
 def closest(list, Number):
@@ -703,6 +705,8 @@ def kelvinToCelcius(kelvin):
     return round(celcius,0)
 
 def getPanelTemp(panelToRun):
+    testFunction(300)
+    print(f'getting panel {panelToRun} temperature')
     if panelToRun == os.environ['panel1']:
         id = os.environ['panel1ID']
         
@@ -710,22 +714,28 @@ def getPanelTemp(panelToRun):
         id = os.environ['panel2ID']
 
     PORT = '/dev/serial/by-id/'+id
+    #print(PORT)
 
     try:
         ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
         ser.flushInput()
         ser.flushOutput()
+        #print('serial comms made')
     except:
         print("ERROR: is the USB cable connected?")
         errorLogger("FATAL ERROR error connecting to uDAQ over serial")
-        sys.exit() #commented for testing
-
+        #sys.exit() #commented for testing
+    #print('test')
+    #t = cmdLoop('getmon', ser)
+    #print(t)
     temp = float(cmdLoop('getmon', ser).strip().split()[1])
+    #print(temp)
     ser.close()
+    #print(kelvinToCelcius(temp))
     return kelvinToCelcius(temp)
 
-def getThresholdAndVoltageNew(panel):
-
+def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
+    print(f'getting threshold and voltage settings for panel {panel} at temp {panelTemp}')
     '''
     TO DO bias correction:
 
@@ -747,8 +757,8 @@ def getThresholdAndVoltageNew(panel):
     
     
     '''
-
-    panelTemp = getPanelTemp(panel)
+    
+    #panelTemp = getPanelTemp(panel)
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     dir_list = os.listdir(path)
     #print(dir_list)
@@ -757,7 +767,7 @@ def getThresholdAndVoltageNew(panel):
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if temp in range(bottom,top):
+        if panelTemp in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i
@@ -779,7 +789,31 @@ def getThresholdAndVoltageNew(panel):
 
     if len(temp_dir_list) !=0:
         readTempFile = os.path.join(tempDir, temp_dir_list[0])
-        print(f'temp file is {readTempFile}')
+        #print(f'temp file is {readTempFile}\n')
+       
+        myFile = f'{readTempFile}/thresholdSweeps/'
+        dir_list = os.listdir(myFile)
+        #print(dir_list)
+        for i in dir_list:
+            if f'panel{panel}' in i:
+                myFile+=i
+        #print(myFile)
+        with open(myFile, 'r') as f:
+            settingsList = []
+            settingsList = f.readlines()
+
+        rateList = []
+        for n,j in enumerate(settingsList):
+            split = j.split(',')
+            if n > 1:
+                
+                rateList.append(float(split[2]))
+        
+        #print(rateList)
+        myIndex = closest(rateList,trigRate)
+        print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
+        #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
+        return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
 
         #read the threshold file and select based on desired trigger rate from two panels
 

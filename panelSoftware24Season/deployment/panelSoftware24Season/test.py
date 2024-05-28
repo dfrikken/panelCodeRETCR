@@ -31,15 +31,15 @@ useGPIO = 0
 
 def main():
     hit.testFunction(300)
-    path = '/home/retcr/deployment/panelSoftware24Season/test/'
-
+    path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     here = os.path.dirname(path)
 
     for i in range(-40,10):
         if i%5 ==0:
             print(f'{i}_{i+5}')
             dirName = f'{i}_{i+5}'
-            os.makedirs(os.path.join(here, dirName))
+            if not os.path.exists(os.path.join(here, dirName)):
+                os.makedirs(os.path.join(here, dirName))
 
 
 if __name__ == "__main__":

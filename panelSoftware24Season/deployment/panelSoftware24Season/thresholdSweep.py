@@ -19,11 +19,11 @@ import subprocess
 from subprocess import PIPE, Popen
 import histogramMode as hm
 
-def main(panel1Voltage,panel2Voltage,tempDir):
-
+def main(panel1Voltage=2770,panel2Voltage=2770):
+    hit.testFunction(300)
     runTime = 10
-    panel1Voltage = 2770
-    panel2Voltage = 2770
+    panel1Voltage = 2800
+    panel2Voltage = 2800
     panel1 = os.environ['panel1']
     panel2 = os.environ['panel2']
 
@@ -45,8 +45,8 @@ def main(panel1Voltage,panel2Voltage,tempDir):
             tempDir = i
             tempRange = i
             break
-    
-    panel1TempDir = os.path.join(normFilePath, tempDir)
+    panel1TempDir = tempDir
+    #panel1TempDir = os.path.join(normFilePath, tempDir)
 
 
     fileList = []
@@ -60,7 +60,8 @@ def main(panel1Voltage,panel2Voltage,tempDir):
             tempRange = i
             break
     
-    panel2TempDir = os.path.join(normFilePath, tempDir)
+    panel2TempDir = tempDir
+    #panel2TempDir = os.path.join(normFilePath, tempDir)
     
     print(f'panel 1 temp is {panel1Temp} using {panel1TempDir}')
     print(f'panel 2 temp is {panel2Temp} using {panel2TempDir}')
@@ -77,7 +78,9 @@ def main(panel1Voltage,panel2Voltage,tempDir):
     #print(f'files made, running histogram mode for threshold sweep for temp range {tempDir}')
     
     for i in range(50):
-        threshold= 3000 - i*10
+        #threshold= 3000 - i*10
+        threshold= 2000 - i*10 #lab value
+        print(f'threshold value for run is {threshold}')
         #print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')
         
         
@@ -99,7 +102,8 @@ def main(panel1Voltage,panel2Voltage,tempDir):
     
 
 def makeFile(panel,mydate,tempDir):
-    runDir = f'runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'
+    runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'
+    #runDir = f'runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
     if os.path.exists(os.path.join(here, runDir)):
         rateFileName = f'{runDir}/panel{panel}ThresholdSweep_{mydate}.txt'

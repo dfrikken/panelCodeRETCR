@@ -19,8 +19,8 @@ import subprocess
 from subprocess import PIPE, Popen
 import histogramMode as hm
 
-def main(tempDir,startVoltage=2800,nRuns=10):
-
+def main(startVoltage=2800,nRuns=10):
+    hit.testFunction(300)
     runTime = 30
     threshold = 1500
 
@@ -45,8 +45,8 @@ def main(tempDir,startVoltage=2800,nRuns=10):
             tempRange = i
             break
     
-    panel1TempDir = os.path.join(normFilePath, tempDir)
-
+    #panel1TempDir = os.path.join(normFilePath, tempDir)
+    panel1TempDir = tempDir
 
     fileList = []
     for i in dir_list:
@@ -59,8 +59,9 @@ def main(tempDir,startVoltage=2800,nRuns=10):
             tempRange = i
             break
     
-    panel2TempDir = os.path.join(normFilePath, tempDir)
-    
+    #panel2TempDir = os.path.join(normFilePath, tempDir)
+    panel2TempDir = tempDir
+
     print(f'panel 1 temp is {panel1Temp} using {panel1TempDir}')
     print(f'panel 2 temp is {panel2Temp} using {panel2TempDir}')
 
@@ -70,6 +71,8 @@ def main(tempDir,startVoltage=2800,nRuns=10):
     p1Filename = makeFile(panel1,mydate,panel1TempDir)
     p2Filename = makeFile(panel2,mydate,panel2TempDir)
     print('files made, running histogram mode for gain sweep')
+    #print(p1Filename)
+    #print(p2Filename)
     
     for i in range(nRuns):
         voltage = startVoltage - i*5
@@ -92,15 +95,18 @@ def main(tempDir,startVoltage=2800,nRuns=10):
     
 
 def makeFile(panel,mydate,tempDir):
-    runDir = f'runs/normalizationRuns/{tempDir}/{mydate}/voltageSweeps'
+    runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/voltageSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
-    if os.path.exists(os.path.join(here, runDir)):
+    #print(f'here is {here}')
+    if os.path.exists(runDir):
+    #if os.path.exists(os.path.join(here, runDir)):
         rateFileName = f'{runDir}/panel{panel}VoltageSweep_{mydate}.txt'
-        #print(rateFileName)
+        #print(f'rate file is {rateFileName}')
 
     else:
-        #print('directory doesnt exist')
-        os.makedirs(os.path.join(here, runDir))
+        print('directory doesnt exist')
+        os.makedirs(runDir)
+        #os.makedirs(os.path.join(here, runDir))
         rateFileName = f'{runDir}/panel{panel}VoltageSweep_{mydate}.txt'
         #print(rateFileName)
     

@@ -59,8 +59,17 @@ def main():
     global panel2
     panel1 = os.environ['panel1']
     panel2 = os.environ['panel2']
-    settingsList1 = hit.getThresholdAndVoltage(panel1,triggerRate)
-    settingsList2 = hit.getThresholdAndVoltage(panel2,triggerRate)
+
+    #hit.powerCycle()
+    time.sleep(.5)
+    #panelStart = hit.panelStartup()
+    #time.sleep(.5)
+    panel1Temp = hit.getPanelTemp(panel1)
+    panel2Temp = hit.getPanelTemp(panel2)
+
+    print(f'temps are {panel1Temp} and {panel2Temp}')
+    settingsList1 = hit.getThresholdAndVoltageNew(panel1,panel1Temp,triggerRate)
+    settingsList2 = hit.getThresholdAndVoltageNew(panel2,panel2Temp,triggerRate)
 
     print(triggerRate)
     p1 = start1(settingsList1,triggerRate)

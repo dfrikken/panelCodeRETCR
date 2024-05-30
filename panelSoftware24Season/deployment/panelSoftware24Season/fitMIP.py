@@ -5,18 +5,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pylandau
 import os
+import serial
+import hitBufferDefine as hit
 
-def main():
+def main(panel=str(12)):
 
-    hit.testFunction(300)
+    targetMIP = 1200
+    print(panel)
+    #panel1 = panel
 
-    panel1 = os.environ['panel1']
-    panel2 = os.environ['panel2']
+    #panel1 = os.environ['panel1']
+    #panel1 = os.environ['panel2']
 
     serNone = serial.Serial()
 
-    panel1Temp = hit.getPanelTemp(panel1,serNone)
+    panelTemp = hit.getPanelTemp(panel,serNone)
     #panel2Temp = hit.getPanelTemp(panel2,serNone)
+    print(f'temp is {panelTemp}')
 
     normFilePath = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
 
@@ -27,24 +32,23 @@ def main():
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if panel1Temp in range(bottom,top):
+        if panelTemp in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i
             break
     
     #panel1TempDir = os.path.join(normFilePath, tempDir)
-    panel1TempDir = tempDir
+    panelTempDir = tempDir
+    print(panelTempDir)
 
+    path = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panelTempDir}'
+    
 
-    '''
-    panelNumber = f'panel{panelToRun}'
-    panel = os.environ[panelNumber]
+    print(f'using files from {path}')
 
-    #runDirectory = '/Users/frikken.1/documents/GitHub/panelCodeRETCR/runs/normalizationRuns/station46/2024-05-14/voltageSweeps/histogramRuns/'
-    path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns'
     dir_list = os.listdir(path)
-    #print(dir_list)
+
     fileList = []
     for i in dir_list:
         if '202' in i:
@@ -52,15 +56,21 @@ def main():
             fileList.append(i)
 
     fileList.sort()
+    print(fileList[-1])
 
-    print(f'using files from {fileList[-1]}')
-    myDir = f'{path}/{fileList[-1]}/voltageSweeps/histogramRuns'
+    
+    myDir = f'{path}/{fileList[-1]}/histogramRuns'
+    print(myDir)
+    #panel = panel
+    mipList = []
+    voltList = []
+    
     if os.path.isdir(myDir):
         for run in range(1,20):
             print(f'voltage sweep run {run} exist for the closest date')
             runStringP0 = f'{myDir}/panel{panel}_run_{run:07d}/panel{panel}_run_{run:07d}_adc0_hist.dat'
             if os.path.isfile(runStringP0):
-                print('file found')
+                #print(f'file found {runStringP0}')
                 histData = open(runStringP0)
                 histList = histData.readlines()
                 yList = []
@@ -70,6 +80,7 @@ def main():
                     if 'voltage' in i:
                         #print(i.strip('\n').split(' '))
                         voltage = i.split(' ')[3]
+                        voltList.append(int(voltage))
                         print(voltage)
 
                     if 'threshold' in i:
@@ -82,25 +93,31 @@ def main():
                         for j in range(int(y)):
                             xList.append(int(x))
                 n, bins, patches = plt.hist(xList,bins=200,histtype='step',range=(700,4000))
-                mip = fitLandau(n,bins) 
+                mip = fitLandau(n,bins,run,panel) 
                 print(mip)
+                mipList.append(mip)
+                
 
             else:
                 break
 
            
             #return mip
+        closeIndex = hit.closest(mipList, targetMIP)
+        print(f'MIP target is {targetMIP}, nearest found {mipList[closeIndex]} with voltage {voltList[closeIndex]}')
 
     
-    '''
+
+    
+    
     
 
 
 
-def fitLandau(n,bins):
+def fitLandau(n,bins,run,panel):
     
 
-    # Create fake data with possion error
+    
     mpv, eta, sigma, A = 1500, 100, 300, 1000
     x = bins[:-1]
     y = n
@@ -108,7 +125,7 @@ def fitLandau(n,bins):
     yerr = np.ones(f.shape)
     yerr[y < 1] = 1
     y += yerr
-    param_bounds=([1000,10,10,200],[4000,400,400,3000])
+    param_bounds=([800,10,10,200],[4000,400,400,3000])
     # Fit with constrains
     coeff, pcov = curve_fit(pylandau.langau, x, y,
                         sigma=yerr,
@@ -117,10 +134,14 @@ def fitLandau(n,bins):
                         bounds=param_bounds)
 
     # Plot
-    #plt.errorbar(x, y, np.sqrt(pylandau.langau(x, *coeff)), fmt=".")
-    #plt.plot(x, pylandau.langau(x, *coeff), "-")
-    #plt.show()
-    print(coeff)
+    plt.clf()
+    plt.errorbar(x, y, np.sqrt(pylandau.langau(x, *coeff)), fmt=".")
+    plt.plot(x, pylandau.langau(x, *coeff), "-")
+    plt.yscale('log')
+    plt.savefig(f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/20_25/2024-05-30/panel{panel}_run{run}MIP.png')
+    plt.show()
+    
+    #print(coeff)
     return coeff[0]
 
 

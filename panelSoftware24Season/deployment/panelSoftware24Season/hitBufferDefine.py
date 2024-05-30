@@ -718,6 +718,9 @@ def getPanelTemp(panelToRun, ser):
         if panelToRun == os.environ['panel2']:
             id = os.environ['panel2ID']
 
+        else:
+            print(f'panel number not valid')
+
         PORT = '/dev/serial/by-id/'+id
         #print(PORT)
 
@@ -734,6 +737,7 @@ def getPanelTemp(panelToRun, ser):
     #t = cmdLoop('getmon', ser)
     #print(t)
     temp = float(cmdLoop('getmon', ser).strip().split()[1])
+    
     #print(temp)
     #ser.close()
     #print(kelvinToCelcius(temp))

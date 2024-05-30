@@ -140,6 +140,13 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
 
         # .bin file containing the panel data
         with open(os.path.join(rundir, runfile+'.bin'), 'wb') as bfile:
+            
+            #temp correction going here for top of run settings
+            temp = hit.getPanelTemp(panel, ser)
+            settingsList = hit.getThresholdAndVoltageNew(panel,temp,triggerRate)
+            args.disc = settingsList[0]
+            args.voltage = settingsList[1]
+            
 
             #uDAQ setup for data run
             hit.init(ser,args)

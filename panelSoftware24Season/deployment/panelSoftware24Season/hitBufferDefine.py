@@ -172,6 +172,10 @@ def resetUDaq(ser): #error log entry made
 
 def init(ser,args): #error log entry made
     resetUDaq(ser)
+    if args.voltage > 2800:
+        print('ERROR: voltage setting should never need to be >2800')
+        args.voltage = 2800
+        #sys.exit()
     # initialize the adcs, set voltage, threshold, etc.
     commands = [
         'auxdac 1 {0}'.format(args.voltage),
@@ -704,33 +708,34 @@ def kelvinToCelcius(kelvin):
     celcius = kelvin - 273.15
     return round(celcius,0)
 
-def getPanelTemp(panelToRun):
+def getPanelTemp(panelToRun, ser):
     testFunction(300)
     print(f'getting panel {panelToRun} temperature')
-    if panelToRun == os.environ['panel1']:
-        id = os.environ['panel1ID']
-        
-    if panelToRun == os.environ['panel2']:
-        id = os.environ['panel2ID']
+    if not ser.isOpen():
+        if panelToRun == os.environ['panel1']:
+            id = os.environ['panel1ID']
+            
+        if panelToRun == os.environ['panel2']:
+            id = os.environ['panel2ID']
 
-    PORT = '/dev/serial/by-id/'+id
-    #print(PORT)
+        PORT = '/dev/serial/by-id/'+id
+        #print(PORT)
 
-    try:
-        ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
-        ser.flushInput()
-        ser.flushOutput()
-        #print('serial comms made')
-    except:
-        print("ERROR: is the USB cable connected?")
-        errorLogger("FATAL ERROR error connecting to uDAQ over serial")
-        #sys.exit() #commented for testing
+        try:
+            ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
+            ser.flushInput()
+            ser.flushOutput()
+            print('serial comms made')
+        except:
+            print("ERROR: is the USB cable connected?")
+            errorLogger("FATAL ERROR error connecting to uDAQ over serial")
+            #sys.exit() #commented for testing
     #print('test')
     #t = cmdLoop('getmon', ser)
     #print(t)
     temp = float(cmdLoop('getmon', ser).strip().split()[1])
     #print(temp)
-    ser.close()
+    #ser.close()
     #print(kelvinToCelcius(temp))
     return kelvinToCelcius(temp)
 

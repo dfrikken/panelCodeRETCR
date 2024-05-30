@@ -60,20 +60,20 @@ def main():
     panel1 = os.environ['panel1']
     panel2 = os.environ['panel2']
 
-    #hit.powerCycle()
-    time.sleep(.5)
-    #panelStart = hit.panelStartup()
-    #time.sleep(.5)
-    panel1Temp = hit.getPanelTemp(panel1)
-    panel2Temp = hit.getPanelTemp(panel2)
+    hit.powerCycle()
+    time.sleep(1)
+    hit.panelStartup()
+    time.sleep(2)
+    #panel1Temp = hit.getPanelTemp(panel1)
+    #panel2Temp = hit.getPanelTemp(panel2)
 
-    print(f'temps are {panel1Temp} and {panel2Temp}')
-    settingsList1 = hit.getThresholdAndVoltageNew(panel1,panel1Temp,triggerRate)
-    settingsList2 = hit.getThresholdAndVoltageNew(panel2,panel2Temp,triggerRate)
+    #print(f'temps are {panel1Temp} and {panel2Temp}')
+    #settingsList1 = hit.getThresholdAndVoltageNew(panel1,panel1Temp,triggerRate)
+    #settingsList2 = hit.getThresholdAndVoltageNew(panel2,panel2Temp,triggerRate)
 
     print(triggerRate)
-    p1 = start1(settingsList1,triggerRate)
-    p2 = start2(settingsList2,triggerRate)
+    p1 = start1(triggerRate)
+    p2 = start2(triggerRate)
     
     signal.signal(signal.SIGINT, signal_handler)
     now = datetime.now()
@@ -104,18 +104,18 @@ def main():
             print(f'p2 {p2.is_alive()}')
             restart(p1,p2)
             time.sleep(1)
-            p1 = start1(settingsList1,triggerRate)
+            p1 = start1(triggerRate)
             time.sleep(.1)
-            p2 = start2(settingsList2,triggerRate)
+            p2 = start2(triggerRate)
         
 
 
-def start1(settingsList,triggerRate):
+def start1(triggerRate):
 
     
 
     process = Process(
-        target=singlePanelHitBufferMode.main,args=(panel1,settingsList[0],settingsList[1],triggerRate,useGPIO)
+        target=singlePanelHitBufferMode.main,args=(panel1,0,0,triggerRate,useGPIO)
     )
     process.daemon = True
     process.start()
@@ -123,10 +123,10 @@ def start1(settingsList,triggerRate):
     print(f'process pid is {process.pid}')
     return process
     
-def start2(settingsList,triggerRate):
+def start2(triggerRate):
     
     process1 = Process(
-        target=singlePanelHitBufferMode.main,args=(panel2,settingsList[0],settingsList[1],triggerRate,useGPIO)
+        target=singlePanelHitBufferMode.main,args=(panel2,0,0,triggerRate,useGPIO)
     )
     process1.daemon = True
     process1.start()

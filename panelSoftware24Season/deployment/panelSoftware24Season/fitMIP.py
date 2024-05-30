@@ -66,7 +66,7 @@ def main(panel=str(12)):
     voltList = []
     
     if os.path.isdir(myDir):
-        for run in range(1,20):
+        for run in range(1,50):
             print(f'voltage sweep run {run} exist for the closest date')
             runStringP0 = f'{myDir}/panel{panel}_run_{run:07d}/panel{panel}_run_{run:07d}_adc0_hist.dat'
             if os.path.isfile(runStringP0):
@@ -93,7 +93,7 @@ def main(panel=str(12)):
                         for j in range(int(y)):
                             xList.append(int(x))
                 n, bins, patches = plt.hist(xList,bins=200,histtype='step',range=(700,4000))
-                mip = fitLandau(n,bins,run,panel) 
+                mip = fitLandau(n,bins,run,panel,f'{path}/{fileList[-1]}') 
                 print(mip)
                 mipList.append(mip)
                 
@@ -114,7 +114,7 @@ def main(panel=str(12)):
 
 
 
-def fitLandau(n,bins,run,panel):
+def fitLandau(n,bins,run,panel,tempDir):
     
 
     
@@ -138,7 +138,7 @@ def fitLandau(n,bins,run,panel):
     plt.errorbar(x, y, np.sqrt(pylandau.langau(x, *coeff)), fmt=".")
     plt.plot(x, pylandau.langau(x, *coeff), "-")
     plt.yscale('log')
-    plt.savefig(f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/20_25/2024-05-30/panel{panel}_run{run}MIP.png')
+    plt.savefig(f'{tempDir}/panel{panel}_run{run}MIP.png')
     plt.show()
     
     #print(coeff)

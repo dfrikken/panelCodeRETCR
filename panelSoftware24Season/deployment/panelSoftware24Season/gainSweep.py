@@ -27,8 +27,10 @@ def main(startVoltage=2800,nRuns=10):
     panel1 = os.environ['panel1']
     panel2 = os.environ['panel2']
 
-    panel1Temp = hit.getPanelTemp(panel1)
-    panel2Temp = hit.getPanelTemp(panel2)
+    serNone = serial.Serial()
+
+    panel1Temp = hit.getPanelTemp(panel1,serNone)
+    panel2Temp = hit.getPanelTemp(panel2,serNone)
 
     normFilePath = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
 

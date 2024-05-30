@@ -6,7 +6,38 @@ import numpy as np
 import pylandau
 import os
 
-def main(panelToRun):
+def main():
+
+    hit.testFunction(300)
+
+    panel1 = os.environ['panel1']
+    panel2 = os.environ['panel2']
+
+    serNone = serial.Serial()
+
+    panel1Temp = hit.getPanelTemp(panel1,serNone)
+    #panel2Temp = hit.getPanelTemp(panel2,serNone)
+
+    normFilePath = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
+
+    dir_list = os.listdir(normFilePath)
+
+    fileList = []
+    for i in dir_list:
+        fileList.append(i)
+        bottom = int(i.split('_')[0])
+        top = int(i.split('_')[1])
+        if panel1Temp in range(bottom,top):
+            #print(i)
+            tempDir = i
+            tempRange = i
+            break
+    
+    #panel1TempDir = os.path.join(normFilePath, tempDir)
+    panel1TempDir = tempDir
+
+
+    '''
     panelNumber = f'panel{panelToRun}'
     panel = os.environ[panelNumber]
 
@@ -60,6 +91,9 @@ def main(panelToRun):
            
             #return mip
 
+    
+    '''
+    
 
 
 

@@ -190,6 +190,14 @@ def signal_handler(sig, frame):
 
     p1.join()
     p2.join()
+
+    command = 'pkill -f gpio'
+    process = Popen(
+        args=command,
+        stdout=subprocess.PIPE,
+        shell=True,
+        preexec_fn=os.setsid
+    )
     time.sleep(2)
     
     sys.exit(0)

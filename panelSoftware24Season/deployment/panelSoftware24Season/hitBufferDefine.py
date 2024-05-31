@@ -14,6 +14,7 @@ import subprocess
 from subprocess import PIPE, Popen
 import numpy as np
 import signal
+from multiprocessing import Process
 
 
 global logDir
@@ -126,8 +127,8 @@ getPanelTemp
 def testFunction(subrunTime=60):
     global srTime
     srTime = subrunTime
-    print('the definition file imported succesfully')
-    print(f'subrunTime for this run is {srTime}')
+    #print('the definition file imported succesfully')
+    #print(f'subrunTime for this run is {srTime}')
     
 def handler(signum, frame):
     print('timeout handler')
@@ -711,15 +712,16 @@ def kelvinToCelcius(kelvin):
 def getPanelTemp(panelToRun, ser):
     testFunction(300)
     print(f'getting panel {panelToRun} temperature')
+    
     if not ser.isOpen():
-        if panelToRun == os.environ['panel1']:
+        if str(panelToRun) == os.environ['panel1']:
             id = os.environ['panel1ID']
             
-        if panelToRun == os.environ['panel2']:
+        if str(panelToRun) == os.environ['panel2']:
             id = os.environ['panel2ID']
 
-        else:
-            print(f'panel number not valid')
+        #else:
+        #    print(f'panel number not valid')
 
         PORT = '/dev/serial/by-id/'+id
         #print(PORT)
@@ -728,7 +730,7 @@ def getPanelTemp(panelToRun, ser):
             ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
             ser.flushInput()
             ser.flushOutput()
-            print('serial comms made')
+            #print('serial comms made')
         except:
             print("ERROR: is the USB cable connected?")
             errorLogger("FATAL ERROR error connecting to uDAQ over serial")
@@ -736,14 +738,21 @@ def getPanelTemp(panelToRun, ser):
     #print('test')
     #t = cmdLoop('getmon', ser)
     #print(t)
-    temp = float(cmdLoop('getmon', ser).strip().split()[1])
+    temp = (cmdLoop('getmon', ser).strip().split()[1])
+    if temp == 'OK':
+        temp = (cmdLoop('getmon', ser).strip().split()[1])
     
     #print(temp)
     #ser.close()
     #print(kelvinToCelcius(temp))
-    return kelvinToCelcius(temp)
+    return kelvinToCelcius(float(temp))
 
 def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
+    
+    import gainSweep as gain
+    import fitMIP as mip
+    import thresholdSweep as thresh
+
     print(f'getting threshold and voltage settings for panel {panel} at temp {panelTemp}')
     '''
     TO DO bias correction:
@@ -784,46 +793,147 @@ def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
 
     tempDir = os.path.join(path, tempDir)
     temp_dir_list = os.listdir(tempDir)
+
+    #make panel 2 sit and color for a while while panel1 processes the temp correction
+    if len(temp_dir_list) ==0 and str(panel) == os.environ['panel2']:
+        print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
+        time.sleep(200)
+        temp_dir_list = os.listdir(tempDir)
+        dataDir = os.path.join(tempDir,temp_dir_list[0])
+        checkThreshDone = f'{dataDir}/status.txt'
+        while(os.path.isfile(checkThreshDone) != 1):
+            #time.sleep(1)
+            #print(f'panel {panel} waiting for finish of sweeps')
+            pass
     #print(temp_dir_list)
 
     if len(temp_dir_list) ==0:
-        print(f'current temp is {temp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
+        signal.alarm(0)
+        print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
         runDir = '/home/retcr/deployment/panelSoftware24Season/runs/'
+        #cmdline('python /home/retcr/deployment/panelSoftware24Season/gainSweep.py')
+
+        #gain.main(2800,10)
+        
+        gainThread = Popen(
+                
+                args='python /home/retcr/deployment/panelSoftware24Season/gainSweep.py',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+        )
+        gainThread.wait()
+        print('gain sweeps completed, fitting MIP peaks')
+        #os.killpg(os.getpgid(gainThread.pid), signal.SIGINT)
+
+        mipThread = Popen(
+                
+                args='python /home/retcr/deployment/panelSoftware24Season/fitMIP.py',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+        )
+        mipThread.wait()
+
+        print('MIP peaks fit, running threshold Sweep')
+  
+
+        threshThread = Popen(
+                
+                args=f'python /home/retcr/deployment/panelSoftware24Season/thresholdSweep.py',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+        )
+        threshThread.wait()
+
+        print('threshold sweep complete, returning to normally scheduled programming')
+        
+        #mipList = subprocess.call('python /home/retcr/deployment/panelSoftware24Season/fitMIP.py')
+        #mipList = subprocess.check_output(['python /home/retcr/deployment/panelSoftware24Season/fitMIP.py'])
+        #print(mipList)
+
+        #mipList = mip.main()
+        #thresh.main(mipList[0][2],mipList[1][2])
         
         #bias sweep +- some value from last used 
             #change the twopanels and singlehit to make the voltage threshold check top of hour
         #fitmip.py to get correct bias
         #threshold sweep
+    temp_dir_list = os.listdir(tempDir)
+    #print(temp_dir_list)
+    readTempFile = os.path.join(tempDir, temp_dir_list[0])
+    with open(f'{readTempFile}/status.txt', 'w') as f:
+        f.write(f'{time.time_ns} sweeps completed')
+    #if len(temp_dir_list) !=0:
+    
+    
+    myFile = f'{readTempFile}/thresholdSweeps/'
+    dir_list = os.listdir(myFile)
+    #print(dir_list)
+    for i in dir_list:
+        if f'panel{panel}' in i:
+            myFile+=i
+    #print(myFile)
+    with open(myFile, 'r') as f:
+        settingsList = []
+        settingsList = f.readlines()
+
+    rateList = []
+    for n,j in enumerate(settingsList):
+        split = j.split(',')
+        if n > 1:
+            
+            rateList.append(float(split[2]))
+    
+    #print(rateList)
+    myIndex = closest(rateList,trigRate)
+    print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
+    #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
+    signal.alarm(srTime*2)
+    return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
 
 
-    if len(temp_dir_list) !=0:
-        readTempFile = os.path.join(tempDir, temp_dir_list[0])
-        #print(f'temp file is {readTempFile}\n')
-       
-        myFile = f'{readTempFile}/thresholdSweeps/'
-        dir_list = os.listdir(myFile)
-        #print(dir_list)
-        for i in dir_list:
-            if f'panel{panel}' in i:
-                myFile+=i
-        #print(myFile)
-        with open(myFile, 'r') as f:
-            settingsList = []
-            settingsList = f.readlines()
 
-        rateList = []
-        for n,j in enumerate(settingsList):
-            split = j.split(',')
-            if n > 1:
-                
-                rateList.append(float(split[2]))
-        
-        #print(rateList)
-        myIndex = closest(rateList,trigRate)
-        print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
-        #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
-        return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
+def makeFile(panel,mydate,tempDir):
+    runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/voltageSweeps'
+    here = os.path.dirname(os.path.abspath(__file__))
+    #print(f'here is {here}')
+    if os.path.exists(runDir):
+    #if os.path.exists(os.path.join(here, runDir)):
+        rateFileName = f'{runDir}/panel{panel}VoltageSweep_{mydate}.txt'
+        #print(f'rate file is {rateFileName}')
 
-        #read the threshold file and select based on desired trigger rate from two panels
+    else:
+        print('directory doesnt exist')
+        os.makedirs(runDir)
+        #os.makedirs(os.path.join(here, runDir))
+        rateFileName = f'{runDir}/panel{panel}VoltageSweep_{mydate}.txt'
+        #print(rateFileName)
+    
+    return rateFileName
+
+def readMipFile(panel, dataDir):
+    
+    with open(f'{dataDir}/panel{panel}_MIPPeaks.txt') as mipFile:
+        inList = mipFile.readlines()
+        threshFromMip = []
+        mipFromFit = []
+        for i in inList:
+            #print(i)
+            spl = i.split(',')
+            threshFromMip.append(int(spl[0].strip('\n')))
+            mipFromFit.append(float(spl[2].strip('\n')))
+
+    #print(mipFromFit)
+    
+    targetMIP = 1200
+    mipCloseIndex = closest(mipFromFit,targetMIP)
+    print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at threshold {threshFromMip[mipCloseIndex]}')
+    return threshFromMip[mipCloseIndex]
+
 
 

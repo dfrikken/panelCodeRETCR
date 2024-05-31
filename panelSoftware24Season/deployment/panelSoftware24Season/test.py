@@ -41,6 +41,14 @@ def main():
             if not os.path.exists(os.path.join(here, dirName)):
                 os.makedirs(os.path.join(here, dirName))
 
+    panel = str(12)
+    ser = serial.Serial()
+    temp = hit.getPanelTemp(panel, ser)
+    settingsList = hit.getThresholdAndVoltageNew(panel,temp,300)
+    ser = serial.Serial()
+    temp = hit.getPanelTemp(3, ser)
+    hit.getThresholdAndVoltageNew(3,temp,300)
+
 
 if __name__ == "__main__":
     main()

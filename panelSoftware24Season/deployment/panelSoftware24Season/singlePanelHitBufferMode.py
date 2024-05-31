@@ -142,11 +142,29 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
         with open(os.path.join(rundir, runfile+'.bin'), 'wb') as bfile:
             
             #temp correction going here for top of run settings
-            temp = hit.getPanelTemp(panel, ser)
+            ser.close()
+            serPort.close()
+            serNone = serial.Serial()
+            
+            temp = hit.getPanelTemp(panel, serNone)
             settingsList = hit.getThresholdAndVoltageNew(panel,temp,triggerRate)
             args.disc = settingsList[0]
             args.voltage = settingsList[1]
-            
+
+            try:
+                ser = serial.Serial(port=PORT, baudrate=1000000,parity = serial.PARITY_NONE, timeout=3,stopbits=1)
+                ser.flushInput()
+                ser.flushOutput()
+            except:
+                print("ERROR: is the USB cable connected?")
+                hit.errorLogger("FATAL ERROR error connecting to uDAQ over serial")
+                sys.exit() #commented for testing
+            print('serial connection made')
+            signal.signal(signal.SIGINT, signal_handler)
+            print('signal handler made')
+            #global serPort
+            serPort = ser
+
 
             #uDAQ setup for data run
             hit.init(ser,args)

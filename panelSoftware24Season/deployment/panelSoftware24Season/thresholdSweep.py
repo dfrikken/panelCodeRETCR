@@ -19,17 +19,66 @@ import subprocess
 from subprocess import PIPE, Popen
 import histogramMode as hm
 
-def main(panel1Voltage=2770,panel2Voltage=2770):
-    hit.testFunction(300)
+def main():
+    
+    hit.testFunction(3000)
     runTime = 10
-    panel1Voltage = 2800
-    panel2Voltage = 2800
+
+    
+    
+
+   
+    
     panel1 = os.environ['panel1']
     panel2 = os.environ['panel2']
 
+    serNone =  serial.Serial()
+    panel1Temp = hit.getPanelTemp(panel1,serNone)
+    panel2Temp = hit.getPanelTemp(panel2,serNone)
 
-    panel1Temp = hit.getPanelTemp(panel1)
-    panel2Temp = hit.getPanelTemp(panel2)
+    path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
+    dir_list = os.listdir(path)
+    #print(dir_list)
+    fileList = []
+    for i in dir_list:
+        fileList.append(i)
+        bottom = int(i.split('_')[0])
+        top = int(i.split('_')[1])
+        if panel1Temp in range(bottom,top):
+            #print(i)
+            tempDir = i
+            tempRange = i
+            break
+
+    tempDir = os.path.join(path, tempDir)
+    temp_dir_list = os.listdir(tempDir)
+    #print(tempDir)
+    dataDir = os.path.join(tempDir,temp_dir_list[0])
+
+    panel1Voltage = hit.readMipFile(panel1, dataDir)
+
+    dir_list = os.listdir(path)
+    #print(dir_list)
+    fileList = []
+    for i in dir_list:
+        fileList.append(i)
+        bottom = int(i.split('_')[0])
+        top = int(i.split('_')[1])
+        if panel2Temp in range(bottom,top):
+            #print(i)
+            tempDir = i
+            tempRange = i
+            break
+
+    tempDir = os.path.join(path, tempDir)
+    temp_dir_list = os.listdir(tempDir)
+    #print(tempDir)
+    dataDir = os.path.join(tempDir,temp_dir_list[0])
+
+    panel2Voltage = hit.readMipFile(panel2,dataDir)
+    print(panel1Voltage,panel2Voltage)
+
+    
 
     normFilePath = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
 
@@ -77,9 +126,9 @@ def main(panel1Voltage=2770,panel2Voltage=2770):
     p2Filename = makeFile(panel2,mydate,panel2TempDir)
     #print(f'files made, running histogram mode for threshold sweep for temp range {tempDir}')
     
-    for i in range(50):
-        #threshold= 3000 - i*10
-        threshold= 2000 - i*10 #lab value
+    for i in range(30):
+        threshold= 3000 - i*10
+        #threshold= 2000 - i*10 #lab value
         print(f'threshold value for run is {threshold}')
         #print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')
         

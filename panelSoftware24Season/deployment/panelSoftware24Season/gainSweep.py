@@ -80,6 +80,17 @@ def main(startVoltage=2800,nRuns=10):
         voltage = startVoltage - i*5
         print(f'running panels at voltage setting {voltage}\n')
         
+        #thread1 = Thread(target=hm.main, args=(0,panel1,threshold,voltage,runTime,p1Filename))
+        #thread1.daemon = True
+        #thread1.start()
+        #thread1.join()
+
+        #thread2 = Thread(target=hm.main, args=(0,panel2,threshold,voltage,runTime,p2Filename))
+        #thread2.daemon = True
+        #thread2.start()
+        #thread2.join()
+
+
         
         p1 = Process(
         target=hm.main,args=(0,panel1,threshold,voltage,runTime,p1Filename)
@@ -94,6 +105,9 @@ def main(startVoltage=2800,nRuns=10):
         p2.start()
         p1.join()
         p2.join()
+        
+        
+       
     
 
 def makeFile(panel,mydate,tempDir):

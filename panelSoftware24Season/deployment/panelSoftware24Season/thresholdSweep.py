@@ -223,6 +223,11 @@ def main():
     with open(f'{statusDir}/status.txt', 'w') as f:
         f.write(f'{time.time_ns} sweeps completed')
 
+    statusDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel2TempDir}/{mydate}'
+    #readTempFile = os.path.join(tempDir, temp_dir_list[0])
+    with open(f'{statusDir}/status.txt', 'w') as f:
+        f.write(f'{time.time_ns} sweeps completed')
+
 
 def makeFile(panel,mydate,tempDir):
     runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'

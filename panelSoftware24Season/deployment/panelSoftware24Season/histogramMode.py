@@ -151,7 +151,7 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         duration = float(stats[4])
         trigrate = events / duration
         #print(f'panel{panelToRun} writing {args.voltage},{args.disc},{round(trigrate,2)},{temp}\n')
-        print('Panel {0} trigger rate = {1} Hz'.format(panelToRun,round(trigrate, 1)))
+        print('Panel {0} trigger rate = {1} Hz'.format(panelToRun,trigrate))
 
         if '.txt' in rateFile:
             
@@ -159,11 +159,11 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
                 #print(rateFile)
                 with open(rateFile,'w') as rf:
                     rf.write('voltage,threshold,trigRate,temp\n')
-                    rf.write(f'{args.voltage},{args.disc},{round(trigrate,2)},{temp}\n')
+                    rf.write(f'{args.voltage},{args.disc},{trigrate},{temp}\n')
                     
             else:
                 with open(rateFile,'a') as rf:
-                    rf.write(f'{args.voltage},{args.disc},{round(trigrate,2)},{temp}\n')
+                    rf.write(f'{args.voltage},{args.disc},{trigrate},{temp}\n')
                     #print(f'writing {args.voltage},{args.disc},{round(trigrate,2)},{temp}\n')
         
         # close the serial connection
@@ -208,7 +208,7 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
                                         continue
                                 
         print('\nSUCCESS --> {0}\n'.format(rundir))
-        sys.exit()
+        #sys.exit()
         
 
 

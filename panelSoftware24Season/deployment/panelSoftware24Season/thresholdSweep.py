@@ -27,7 +27,7 @@ import histogramMode as hm
 
 def main():
     
-    hit.testFunction(600)
+    hit.testFunction(2000)
     runTime = 10
 
     
@@ -148,13 +148,13 @@ def main():
             print(lastThresh, nThreshRan)
         
     else:
-        lastThresh = 2900
+        lastThresh = 2800
         nThreshRan = 0
 
 
 
 
-    for i in range(20-nThreshRan):
+    for i in range(1,30-nThreshRan):
         threshold= lastThresh - i*10
         #threshold= 2000 - i*10 #lab value
         print(f'threshold value for run is {threshold}')

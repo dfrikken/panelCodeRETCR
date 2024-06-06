@@ -30,16 +30,20 @@ useGPIO = 0
 
 
 def main():
-    hit.testFunction(300)
+    hit.testFunction(3000)
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     here = os.path.dirname(path)
 
     for i in range(-40,10):
         if i%5 ==0:
-            print(f'{i}_{i+5}')
+            #print(f'{i}_{i+5}')
             dirName = f'{i}_{i+5}'
             if not os.path.exists(os.path.join(here, dirName)):
                 os.makedirs(os.path.join(here, dirName))
+
+    hit.powerCycle()
+    hit.panelStartup()
+    time.sleep(2)
 
     panel = str(12)
     ser = serial.Serial()

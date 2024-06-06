@@ -19,9 +19,15 @@ import subprocess
 from subprocess import PIPE, Popen
 import histogramMode as hm
 
+
+
+
+#TO DO: write in a power cycler for this to ensure all the thresholds get read
+
+
 def main():
     
-    hit.testFunction(3000)
+    hit.testFunction(600)
     runTime = 10
 
     
@@ -118,6 +124,7 @@ def main():
 
 
 
+
     
     mydatetime = datetime.now()
     mydate = str(mydatetime.date())
@@ -125,30 +132,97 @@ def main():
     p1Filename = makeFile(panel1,mydate,panel1TempDir)
     p2Filename = makeFile(panel2,mydate,panel2TempDir)
     #print(f'files made, running histogram mode for threshold sweep for temp range {tempDir}')
+    p1FileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel1TempDir}/{mydate}/histogramRuns'
+    p2FileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel2TempDir}/{mydate}/histogramRuns'
+    print(p1Filename)
+    #print(p2FileDir)
     
-    for i in range(30):
-        threshold= 3000 - i*10
+    if os.path.isfile(p1Filename):
+        with open(p1Filename) as f1:
+            inList = f1.readlines()
+            #for i in inList:
+                #print(i)
+            nThreshRan = len(inList)-1
+            lastThresh = int(inList[-1].split(',')[1])
+            #print(lastThresh, len(inList))
+        
+    else:
+        lastThresh = 3000
+        nThreshRan = 0
+
+
+
+
+    for i in range(20-nThreshRan):
+        threshold= lastThresh - i*10
         #threshold= 2000 - i*10 #lab value
         print(f'threshold value for run is {threshold}')
         #print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')
-        
-        
-        p1 = Process(
+        try:
+            p1dir_list_start = os.listdir(p1FileDir)
+            p2dir_list_start = os.listdir(p2FileDir)
+        except:
+            p1dir_list_start = []
+            p2dir_list_start = []
+        p1StartFiles=0
+        p2StartFiles=0
+        for j in p1dir_list_start:
+                if str(f'panel{panel1}') in j:
+                    p1StartFiles+=1
+
+        for j in p2dir_list_start:
+            if str(f'panel{panel2}') in j:
+                p2StartFiles+=1
+    
+
+            
+        p1th = Process(
         target=hm.main,args=(0,panel1,threshold,panel1Voltage,runTime,p1Filename)
         )
-        p1.daemon = True
-        p2 = Process(
+        p1th.daemon = False
+        p2th = Process(
         target=hm.main,args=(0,panel2,threshold,panel2Voltage,runTime,p2Filename)
         )
-        p2.daemon = True
+        p2th.daemon = False
 
-        p1.start()
-        p2.start()
-        p1.join()
-        p2.join()
-    
+        p1th.start()
+        p2th.start()
+        p1th.join()
+        p2th.join()
         
-    
+        if p1th.is_alive():
+            os.kill(p1th.pid, signal.SIGINT)
+        if p2th.is_alive():
+            os.kill(p2th.pid, signal.SIGINT)
+
+
+        p1dir_list = os.listdir(p1FileDir)
+        p2dir_list = os.listdir(p2FileDir)
+
+        #p1dir_list.sort()
+        p1NumFiles=0
+        p2NumFiles=0
+        for j in p1dir_list:
+            if str(f'panel{panel1}') in j:
+                p1NumFiles+=1
+
+        for j in p2dir_list:
+            if str(f'panel{panel2}') in j:
+                p2NumFiles+=1
+
+        
+          
+
+        
+        #check if both files written ( files written at end of histogram.main() )
+        print(f'panel {panel1} number of files at start {p1StartFiles} number after run try {(p1NumFiles)}')
+        print(f'panel {panel2} number of files at start {(p2StartFiles)} number after run try {(p2NumFiles)}')
+
+    statusDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel1TempDir}/{mydate}'
+    #readTempFile = os.path.join(tempDir, temp_dir_list[0])
+    with open(f'{statusDir}/status.txt', 'w') as f:
+        f.write(f'{time.time_ns} sweeps completed')
+
 
 def makeFile(panel,mydate,tempDir):
     runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'

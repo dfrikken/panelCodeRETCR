@@ -16,10 +16,12 @@ import glob
 import serial
 import datetime
 import hitBufferDefine as hit
+import signal
 
 def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''):
-        hit.testFunction(300)
+        #hit.testFunction(300)
          #arguments for the run
+        #signal.signal(signal.SIGINT, signal_handler)
         ap = argparse.ArgumentParser()
         ap.add_argument('-t', '--time', dest='runtime', type=int, default=3)
         ap.add_argument('-v', '--voltage', dest='voltage', type=int, default=2650)
@@ -91,11 +93,14 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         ]
         
         for msg in commands:
-                hit.cmdLoop(msg, ser, 5)
+                #hit.cmdLoop(msg, ser, 5)
+                cmdLoop(msg, ser, 5)
                 
-        uid = hit.cmdLoop('get_uid', ser).strip().split()
+        #uid = hit.cmdLoop('get_uid', ser).strip().split()
+        uid = cmdLoop('get_uid', ser).strip().split()
         uid = ' '.join(uid[:3])
-        temp = hit.cmdLoop('getmon', ser).strip().split()[1]
+        #temp = hit.cmdLoop('getmon', ser).strip().split()[1]
+        temp = cmdLoop('getmon', ser).strip().split()[1]
         
         commands = [
                 'auxdac 1 {0}'.format(args.voltage),
@@ -120,18 +125,19 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         ]
         
         for msg in commands:
-                hit.cmdLoop(msg, ser)
+                #hit.cmdLoop(msg, ser)
+                cmdLoop(msg, ser)
 
         # start and stop the run here
-        hit.cmdLoop('set_livetime_enable 1', ser)
-        hit.cmdLoop('run 1 0 0', ser)
+        cmdLoop('set_livetime_enable 1', ser)
+        cmdLoop('run 1 0 0', ser)
         print('waiting {0} seconds...'.format(args.runtime))
         time.sleep((args.runtime))
-        hit.cmdLoop('stop_run', ser, 5)
-        hit.cmdLoop('set_livetime_enable 0', ser)
+        cmdLoop('stop_run', ser, 5)
+        cmdLoop('set_livetime_enable 0', ser)
 
         # paranoid safety measure - set voltage back to 0
-        hit.cmdLoop('auxdac 1 0', ser)
+        cmdLoop('auxdac 1 0', ser)
 
         # dump the data
         hists = []
@@ -202,6 +208,7 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
                                         continue
                                 
         print('\nSUCCESS --> {0}\n'.format(rundir))
+        sys.exit()
         
 
 
@@ -259,6 +266,13 @@ def getNextRun(panelToRun ,runsdir='runs/histogram'):
         rdir = os.path.join(here, runsdir, run)
         os.makedirs(os.path.join(here, runsdir, run))
         return rdir, run
+
+def signal_handler(sig, frame):
+    print(f'main program stop command issued, closing files and shutting down')
+    
+    
+    sys.exit(0)
+
 
         
 if __name__ == "__main__":

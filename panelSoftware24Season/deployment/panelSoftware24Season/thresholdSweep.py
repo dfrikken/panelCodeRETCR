@@ -40,6 +40,7 @@ def main():
 
     serNone =  serial.Serial()
     panel1Temp = hit.getPanelTemp(panel1,serNone)
+    serNone =  serial.Serial()
     panel2Temp = hit.getPanelTemp(panel2,serNone)
 
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
@@ -144,10 +145,10 @@ def main():
                 #print(i)
             nThreshRan = len(inList)-1
             lastThresh = int(inList[-1].split(',')[1])
-            #print(lastThresh, len(inList))
+            print(lastThresh, nThreshRan)
         
     else:
-        lastThresh = 3000
+        lastThresh = 2900
         nThreshRan = 0
 
 

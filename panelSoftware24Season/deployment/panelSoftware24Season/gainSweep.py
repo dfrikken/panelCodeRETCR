@@ -24,7 +24,7 @@ import histogramMode as hm
 
 
 def main(startVoltage=2800,nRuns=10):
-    hit.testFunction(300)
+    hit.testFunction(600)
     runTime = 30
     threshold = 1500
 
@@ -34,6 +34,8 @@ def main(startVoltage=2800,nRuns=10):
     serNone = serial.Serial()
 
     panel1Temp = hit.getPanelTemp(panel1,serNone)
+    
+    serNone = serial.Serial()
     panel2Temp = hit.getPanelTemp(panel2,serNone)
 
     normFilePath = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
@@ -88,11 +90,14 @@ def main(startVoltage=2800,nRuns=10):
         voltage = startVoltage - i*5
         print(f'running panels at voltage setting {voltage}\n')
      
-        try:
+        if os.path.isdir(p1FileDir):
             p1dir_list_start = os.listdir(p1FileDir)
+
+        if os.path.isdir(p2FileDir):
             p2dir_list_start = os.listdir(p2FileDir)
-        except:
+        if not os.path.isdir(p1FileDir):
             p1dir_list_start = []
+        if not os.path.isdir(p2FileDir):
             p2dir_list_start = []
         p1StartFiles=0
         p2StartFiles=0

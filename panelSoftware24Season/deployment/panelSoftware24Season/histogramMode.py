@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 '''
 TO DO:
@@ -29,8 +29,8 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         ap.add_argument('-p','--panel',dest="panel",type=int,default=0)
         args = ap.parse_args()
 
-        if args.panel!=0:
-            panelToRun = args.panel
+        #if args.panel!=0:
+            #panelToRun = args.panel
 
         #print(args)
         if useArgs ==0:

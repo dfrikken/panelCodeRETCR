@@ -643,7 +643,7 @@ def panelStartup():
         for t in range(5):
             #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
             outLine = cmdline("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
-            time.sleep(.3)
+            time.sleep(.4)
             #print(outLine)
 
             if 'done' in str(outLine):
@@ -670,7 +670,7 @@ def powerCycle():
 
     print("low = on")
     gpio.output(pin, gpio.LOW)
-    time.sleep(.5)
+    time.sleep(.3)
 
 def closest(list, Number):
     aux = []
@@ -747,20 +747,22 @@ def getPanelTemp(panelToRun, ser):
     #print('test')
     #t = cmdLoop('getmon', ser)
     #print(t)
+    outRaw = cmdLoop('getmon', ser)
+    #print(outRaw)
+    outUID = cmdLoop('get_uid', ser)
+    #print(outUID)
     temp = (cmdLoop('getmon', ser).strip().split()[1])
     if temp == 'OK':
         temp = (cmdLoop('getmon', ser).strip().split()[1])
     
-    #print(temp)
+    print(f'panel {panelToRun} temp is {kelvinToCelcius(float(temp))}')
     #ser.close()
     #print(kelvinToCelcius(temp))
     return kelvinToCelcius(float(temp))
 
 def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
     
-    import gainSweep as gain
-    import fitMIP as mip
-    import thresholdSweep as thresh
+   
 
     signal.alarm(0)
     #kill lingering processes from sweeps
@@ -815,15 +817,14 @@ def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
     if len(temp_dir_list) > 0:
     
         readTempFile = os.path.join(tempDir, temp_dir_list[0])
-        statusFile = f'{readTempFile}/status.txt'
+        statusFile = f'{readTempFile}/status{panel}.txt'
         
-    else:
-        statusFile = ' '
+
     print(f'status file exists? {os.path.isfile(statusFile)}')
     #make panel 2 sit and color for a while while panel1 processes the temp correction
     if not os.path.isfile(statusFile) and str(panel) == os.environ['panel2']:
         print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
-        time.sleep(60)
+        time.sleep(5)
         temp_dir_list = os.listdir(tempDir)
         dataDir = os.path.join(tempDir,temp_dir_list[0])
         checkThreshDone = f'{dataDir}/status.txt'
@@ -842,6 +843,7 @@ def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
         #cmdline('python /home/retcr/deployment/panelSoftware24Season/gainSweep.py')
 
         #gain.main(2800,10)
+        print(f'starting gain sweep from {panel}')
         
         gainThread = Popen(
                 
@@ -859,7 +861,7 @@ def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
                 args='python3 /home/retcr/deployment/panelSoftware24Season/gainSweep.py > gain.txt',
                 shell = True,
                 stdout=subprocess.PIPE,
-                preexec_fn=os.setsid
+                preexec_fn=os.setsid 
                 
             )
             gainThread.wait()
@@ -999,6 +1001,207 @@ def readMipFile(panel, dataDir):
     mipCloseIndex = closest(mipFromFit,targetMIP)
     print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at threshold {threshFromMip[mipCloseIndex]}')
     return threshFromMip[mipCloseIndex]
+
+def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
+
+    path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
+    dir_list = os.listdir(path)
+    #print(dir_list)
+    fileList = []
+    for i in dir_list:
+        fileList.append(i)
+        bottom = int(i.split('_')[0])
+        top = int(i.split('_')[1])
+        if panelTemp in range(bottom,top):
+            #print(i)
+            tempDir = i
+            tempRange = i
+            break
+
+    tempDir = os.path.join(path, tempDir)
+    temp_dir_list = os.listdir(tempDir)
+    temp_dir_list.sort()
+    if len(temp_dir_list) == 0:
+        print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
+        print(f'starting gain sweep from {panel}')
+        
+        gainThread = Popen(
+                
+                args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelGainSweep.py -p {panel} > gain.txt',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+        )
+        gainThread.wait()
+        print(gainThread.returncode)
+        print('gain sweeps completed, fitting MIP peaks')
+        #os.killpg(os.getpgid(gainThread.pid), signal.SIGINT)
+
+        mipThread = Popen(
+                
+                args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelFitMIP.py -p {panel} ',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+        )
+        mipThread.wait()
+
+        print('MIP peaks fit, running threshold Sweep')
+
+        threshThread = Popen(
+                
+            args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelThresholdSweep.py -p {panel} > threshOut.txt',
+            shell = True,
+            stdout=subprocess.PIPE,
+            preexec_fn=os.setsid
+            
+        )
+        threshThread.wait()
+        print(threshThread.returncode)
+        
+
+    if len(temp_dir_list) > 0:
+       
+        gainDir = f'{tempDir}/{temp_dir_list[-1]}/voltageSweeps'
+        gain_dir_list = os.listdir(gainDir)
+        numInGainFile = 0
+         #if no gain files 
+        if len(gain_dir_list) ==0:
+            print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
+            print(f'starting gain sweep from {panel}')
+            
+            gainThread = Popen(
+                    
+                    args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelGainSweep.py -p {panel} > gain.txt',
+                    shell = True,
+                    stdout=subprocess.PIPE,
+                    preexec_fn=os.setsid
+                    
+            )
+            gainThread.wait()
+            print(gainThread.returncode)
+
+        #if no MIP fit done
+        temp_dir_list = os.listdir(tempDir)
+        mipDir = f'{tempDir}/{temp_dir_list[-1]}'
+        mip_dir_list = os.listdir(mipDir)
+        #print(mip_dir_list)
+        if f'panel{panel}_MIPPeaks.txt' not in mip_dir_list:
+            print('gain sweeps completed, fitting MIP peaks')
+            #os.killpg(os.getpgid(gainThread.pid), signal.SIGINT)
+
+            mipThread = Popen(
+                    
+                    args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelFitMIP.py -p {panel} ',
+                    shell = True,
+                    stdout=subprocess.PIPE,
+                    preexec_fn=os.setsid
+                    
+            )
+            mipThread.wait()
+
+            print('MIP peaks fit, running threshold Sweep')
+
+            threshThread = Popen(
+                
+                args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelThresholdSweep.py -p {panel} > threshOut.txt',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+            )
+            threshThread.wait()
+            print(threshThread.returncode)
+
+        
+        #if no threshold sweep file
+        temp_dir_list = os.listdir(tempDir)
+        threshDir = f'{tempDir}/{temp_dir_list[-1]}/thresholdSweeps'
+        if not os.path.isdir(threshDir):
+            print('MIP peaks fit, running threshold Sweep')
+            threshThread = Popen(
+                
+                args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelThresholdSweep.py -p {panel} > threshOut.txt',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+            )
+            threshThread.wait()
+            print(threshThread.returncode)
+
+        #if threshold started but not complete
+        if f'status{panel}.txt' not in mip_dir_list:
+            print('threshold sweep not complete, finishing now')
+            threshThread = Popen(
+                
+                args=f'python3 /home/retcr/deployment/panelSoftware24Season/singlePanelThresholdSweep.py -p {panel} > threshOut.txt',
+                shell = True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid
+                
+            )
+            threshThread.wait()
+            print(threshThread.returncode)
+
+    temp_dir_list = os.listdir(tempDir)
+    mipDir = f'{tempDir}/{temp_dir_list[-1]}'
+    mip_dir_list = os.listdir(mipDir)
+    threshDir = f'{tempDir}/{temp_dir_list[-1]}/thresholdSweeps'
+
+    if f'status{panel}.txt' in mip_dir_list:
+        print('threshold sweeps have been completed for this temp, reading settings')
+        dir_list = os.listdir(threshDir)
+        #print(dir_list)
+        myFile = f'{mipDir}/thresholdSweeps/'
+        for i in dir_list:
+            if f'panel{panel}' in i:
+                myFile+=i
+        #print(myFile)
+        with open(myFile, 'r') as f:
+            settingsList = []
+            settingsList = f.readlines()
+
+        rateList = []
+        for n,j in enumerate(settingsList):
+            split = j.split(',')
+            if n > 1:
+                
+                rateList.append(float(split[2]))
+        
+        #print(rateList)
+        myIndex = closest(rateList,trigRate)
+        print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
+        #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
+        #signal.alarm(srTime*2)
+        return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
+
+
+
+
+
+        #if gain file exists
+        if len(gain_dir_list) > 0:
+
+            #check gain directory
+            for i in gain_dir_list:
+                if f'panel{panel}' in i:
+                    gainSweepFile = os.path.join(gainDir,i)
+            #check gain sweep file length (eventually fix if not enough swept)
+            if os.path.isfile(gainSweepFile):
+                with open(gainSweepFile,'r') as f:
+                    gainInList = f.readlines()
+                numInGainFile = len(gainInList)-1
+                #print(numInGainFile)
+
+        
+
+
+        
+            
+    
 
 
 

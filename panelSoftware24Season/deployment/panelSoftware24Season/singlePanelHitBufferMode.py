@@ -145,9 +145,11 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
             ser.close()
             serPort.close()
             serNone = serial.Serial()
-            
             temp = hit.getPanelTemp(panel, serNone)
-            settingsList = hit.getThresholdAndVoltageNew(panel,temp,triggerRate)
+            
+            
+            settingsList = hit.getThresholdAndVoltageSingle(panel,temp,triggerRate)
+            #settingsList = hit.getThresholdAndVoltageNew(panel,temp,triggerRate)
             args.disc = settingsList[0]
             args.voltage = settingsList[1]
 

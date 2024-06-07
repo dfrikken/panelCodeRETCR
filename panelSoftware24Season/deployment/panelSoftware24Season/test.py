@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import sys
@@ -42,16 +42,18 @@ def main():
                 os.makedirs(os.path.join(here, dirName))
 
     hit.powerCycle()
+    time.sleep(.5)
     hit.panelStartup()
-    time.sleep(2)
+    time.sleep(.5)
 
     panel = str(12)
     ser = serial.Serial()
     temp = hit.getPanelTemp(panel, ser)
-    settingsList = hit.getThresholdAndVoltageNew(panel,temp,300)
-    ser = serial.Serial()
-    temp = hit.getPanelTemp(3, ser)
-    hit.getThresholdAndVoltageNew(3,temp,300)
+    hit.getThresholdAndVoltageSingle(panel,temp,300)
+    #settingsList = hit.getThresholdAndVoltageNew(panel,temp,300)
+    #ser = serial.Serial()
+    #temp = hit.getPanelTemp(3, ser)
+    #hit.getThresholdAndVoltageNew(3,temp,300)
 
 
 if __name__ == "__main__":

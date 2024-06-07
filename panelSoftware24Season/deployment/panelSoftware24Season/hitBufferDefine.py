@@ -1172,6 +1172,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
                 rateList.append(float(split[2]))
         
         #print(rateList)
+        panelVoltage = readMipFile(panel, mipDir)
         myIndex = closest(rateList,trigRate)
         print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
         #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])

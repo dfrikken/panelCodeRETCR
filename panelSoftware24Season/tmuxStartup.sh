@@ -17,9 +17,10 @@ else
         tmux select-pane -t stationTmux:0.1
         tmux split-window -v
         tmux resize-pane -y 2
+        tmux send-keys 'date >> powerOnLog.txt' 'C-m'
         tmux send-keys 'uptime >> powerOnLog.txt' 'C-m'
         tmux send-keys 'date' 'C-m'
-        tmux send-keys 'uptime 'C-m'
+        tmux send-keys 'uptime' 'C-m'
         tmux -2 attach-session -t stationTmux
 
 fi

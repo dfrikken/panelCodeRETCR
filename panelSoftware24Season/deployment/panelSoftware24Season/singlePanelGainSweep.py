@@ -22,7 +22,7 @@ import histogramMode as hm
 
 
 
-def main(startVoltage=2800,nRuns=3):
+def main(startVoltage=2800,nRuns=10):
     ap = argparse.ArgumentParser()
     ap.add_argument('-p', '--panel', dest='panel', type=str, default=12)
     args = ap.parse_args()

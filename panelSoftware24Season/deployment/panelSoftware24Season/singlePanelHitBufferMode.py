@@ -189,7 +189,7 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
                     print(f'panel {panel} run {run} subrun {n} with {remainingTime} seconds to hour')
                     hit.infoLogger(f'run {run} subrun {n} with {remainingTime} seconds to hour')
                     hit.cmdLoop(f'run 1 3500 0', ser, 5) #enable "run" in this case a subrun. subrun lasts till 'stop_run' command issued
-                    print(f'panel {panel} sleeping for {subrunTime} seconds to form the subrun')
+                    #print(f'panel {panel} sleeping for {subrunTime} seconds to form the subrun')
                     time.sleep(subrunTime)  #sleep the python program while the uDAQ does its thing
                     out = hit.cmdLoop('stop_run', ser, 100) #stop the subrun to read the buffer out (deadtime for panel data, but still forming triggers to central, and gpio timestamps made)
                     hit.getRate(ser) # print the trigger rate with duration (duration here in case you overfill the buffer if duration != subrunTime then overwrite)

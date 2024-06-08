@@ -1124,7 +1124,14 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
         #if no threshold sweep file
         temp_dir_list = os.listdir(tempDir)
         threshDir = f'{tempDir}/{temp_dir_list[-1]}/thresholdSweeps'
-        if not os.path.isdir(threshDir):
+        thresh_dir_list = os.listdir(threshDir)
+        threshRan = 0
+        for i in thresh_dir_list:
+            if f'panel{panel}' in i:
+                print(f'threshold sweep for panel {panel} found')
+                threshRan=1
+         #if no gain files 
+        if not os.path.isdir(threshDir) or threshRan ==0:
             print('MIP peaks fit, running threshold Sweep')
             threshThread = Popen(
                 

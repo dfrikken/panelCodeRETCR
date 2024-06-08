@@ -1068,7 +1068,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
         gain_dir_list = os.listdir(gainDir)
         numInGainFile = 0
          #if no gain files 
-        if len(gain_dir_list) ==0:
+        if len(gain_dir_list) ==0 or f'panel{panel}VoltageSweep' not in gain_dir_list:
             print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
             print(f'starting gain sweep from {panel}')
             

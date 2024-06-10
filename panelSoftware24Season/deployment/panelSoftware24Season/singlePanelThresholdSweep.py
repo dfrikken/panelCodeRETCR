@@ -50,12 +50,12 @@ def main():
             break
 
     tempDir = os.path.join(path, tempDir)
-    temp_dir_list = os.listdir(tempDir)
+    #temp_dir_list = os.listdir(tempDir)
     #print(tempDir)
     #print(tempRange)
-    dataDir = os.path.join(tempDir,temp_dir_list[0])
+    #dataDir = os.path.join(tempDir,temp_dir_list[0])
     panelTempDir = os.path.join(path, tempRange)
-    panelVoltage = hit.readMipFile(panel, dataDir)
+    panelVoltage = hit.readMipFile(panel, tempDir)
     #print(panelTempDir)
     #print(panelVoltage)
 

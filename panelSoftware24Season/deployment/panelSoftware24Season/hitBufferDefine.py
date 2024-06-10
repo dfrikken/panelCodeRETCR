@@ -1126,7 +1126,10 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
         #if no threshold sweep file
         temp_dir_list = os.listdir(tempDir)
         threshDir = f'{tempDir}/{temp_dir_list[-1]}/thresholdSweeps'
-        thresh_dir_list = os.listdir(threshDir)
+        if os.path.isdir(threshDir):
+            thresh_dir_list = os.listdir(threshDir)
+        else:
+            thresh_dir_list=[]
         threshRan = 0
         for i in thresh_dir_list:
             if f'panel{panel}' in i:

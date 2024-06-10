@@ -656,7 +656,9 @@ def panelStartup():
 
 def powerCycle():
     # gpio pin 2 controls the 24V power
-    pin = int(os.environ['powerPin'])
+    #gpio pin for OSU SUDL is not on 2
+    pin =2
+    #pin = int(os.environ['powerPin'])
     print(f'power pin is {pin}')
     import RPi.GPIO as gpio
 

@@ -52,24 +52,16 @@ def main():
     print(f'using files from {path}')
 
     dir_list = os.listdir(path)
-
-    fileList = []
-    for i in dir_list:
-        if '202' in i:
-            #print(i)
-            fileList.append(i)
-
-    fileList.sort()
-    print(fileList[-1])
+\
 
     
-    myDir = f'{path}/{fileList[-1]}/histogramRuns'
+    myDir = f'{path}/histogramRuns'
     print(myDir)
     #panel = panel
     mipList = []
     voltList = []
 
-    mipFile = open(f'{path}/{fileList[-1]}/panel{panel}_MIPPeaks.txt','w')
+    mipFile = open(f'{path}/panel{panel}_MIPPeaks.txt','w')
     
 
     
@@ -101,7 +93,7 @@ def main():
                         for j in range(int(y)):
                             xList.append(int(x))
                 n, bins, patches = plt.hist(xList,bins=200,histtype='step',range=(700,4000))
-                mip = fitLandau(n,bins,run,panel,f'{path}/{fileList[-1]}') 
+                mip = fitLandau(n,bins,run,panel,f'{path}') 
                 print(mip)
                 mipList.append(mip)
                 #print(f'{voltage},{threshold},{mip}')

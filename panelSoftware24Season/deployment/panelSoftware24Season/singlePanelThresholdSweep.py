@@ -160,6 +160,8 @@ def main():
 
 
 def makeFile(panel,tempDir):
+    mydatetime = datetime.now()
+    mydate = str(mydatetime.date())
     runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/thresholdSweeps'
     #runDir = f'runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'
     here = os.path.dirname(os.path.abspath(__file__))

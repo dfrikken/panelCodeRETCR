@@ -126,6 +126,8 @@ def main(startVoltage=2800,nRuns=10):
 
 
 def makeFile(panel,tempDir):
+    mydatetime = datetime.now()
+    mydate = str(mydatetime.date())
     runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/voltageSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
     #print(f'here is {here}')

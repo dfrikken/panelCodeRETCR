@@ -177,7 +177,9 @@ def main(useArgs = 1, panelToRun=0,disc=1700,voltage=2680,runTime=30,rateFile=''
         #print(f'rateFile is {rateFile}')
         rfSplit = rateFile.split('/')
         #print(f'rate file is {rfSplit}')
-        rateDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{rfSplit[7]}/{rfSplit[8]}/histogramRuns'
+        #removing date from directory path
+        #rateDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{rfSplit[7]}/{rfSplit[8]}/histogramRuns'
+        rateDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{rfSplit[7]}/histogramRuns'
         rundir, runfile = getNextRun(panelToRun,rateDir)
         #print(f'rundir is {rundir}')
         for adc in range(len(hists)):

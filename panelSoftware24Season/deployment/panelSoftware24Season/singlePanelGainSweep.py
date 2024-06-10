@@ -68,12 +68,12 @@ def main(startVoltage=2800,nRuns=10):
     mydatetime = datetime.now()
     mydate = str(mydatetime.date())
 
-    p1Filename = makeFile(panel1,mydate,panel1TempDir)
+    p1Filename = makeFile(panel1,panel1TempDir)
     #p2Filename = makeFile(panel2,mydate,panel2TempDir)
     print('files made, running histogram mode for gain sweep')
     #print(p1Filename)
     #print(p2Filename)
-    p1FileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel1TempDir}/{mydate}/histogramRuns'
+    p1FileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel1TempDir}/histogramRuns'
     #p2FileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel2TempDir}/{mydate}/histogramRuns'
     #print(p1FileDir)
     #print(p2FileDir)
@@ -125,8 +125,8 @@ def main(startVoltage=2800,nRuns=10):
   
 
 
-def makeFile(panel,mydate,tempDir):
-    runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/voltageSweeps'
+def makeFile(panel,tempDir):
+    runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/voltageSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
     #print(f'here is {here}')
     if os.path.exists(runDir):

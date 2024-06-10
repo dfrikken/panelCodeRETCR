@@ -965,8 +965,6 @@ def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
         #signal.alarm(srTime*2)
         return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
 
-
-
 def makeFile(panel,mydate,tempDir):
     runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/voltageSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
@@ -1023,6 +1021,8 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
     tempDir = os.path.join(path, tempDir)
     temp_dir_list = os.listdir(tempDir)
     temp_dir_list.sort()
+
+    
     if len(temp_dir_list) == 0:
         print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')
         print(f'starting gain sweep from {panel}')
@@ -1066,7 +1066,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
 
     if len(temp_dir_list) > 0:
        
-        gainDir = f'{tempDir}/{temp_dir_list[-1]}/voltageSweeps'
+        gainDir = f'{tempDir}/voltageSweeps'
         gain_dir_list = os.listdir(gainDir)
         numInGainFile = 0
         gainRan = 0
@@ -1092,7 +1092,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
 
         #if no MIP fit done
         temp_dir_list = os.listdir(tempDir)
-        mipDir = f'{tempDir}/{temp_dir_list[-1]}'
+        mipDir = f'{tempDir}'
         mip_dir_list = os.listdir(mipDir)
         #print(mip_dir_list)
         if f'panel{panel}_MIPPeaks.txt' not in mip_dir_list:
@@ -1125,7 +1125,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
         
         #if no threshold sweep file
         temp_dir_list = os.listdir(tempDir)
-        threshDir = f'{tempDir}/{temp_dir_list[-1]}/thresholdSweeps'
+        threshDir = f'{tempDir}/thresholdSweeps'
         if os.path.isdir(threshDir):
             thresh_dir_list = os.listdir(threshDir)
         else:
@@ -1164,9 +1164,9 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
             print(threshThread.returncode)
 
     temp_dir_list = os.listdir(tempDir)
-    mipDir = f'{tempDir}/{temp_dir_list[-1]}'
+    mipDir = f'{tempDir}'
     mip_dir_list = os.listdir(mipDir)
-    threshDir = f'{tempDir}/{temp_dir_list[-1]}/thresholdSweeps'
+    threshDir = f'{tempDir}/thresholdSweeps'
 
     if f'status{panel}.txt' in mip_dir_list:
         print('threshold sweeps have been completed for this temp, reading settings')

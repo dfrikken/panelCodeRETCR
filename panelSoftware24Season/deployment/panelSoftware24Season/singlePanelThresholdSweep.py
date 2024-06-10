@@ -71,10 +71,12 @@ def main():
     mydatetime = datetime.now()
     mydate = str(mydatetime.date())
 
-    panelFilename = makeFile(panel,mydate,tempRange)
+    #removing date from directory path 
+    #panelFilename = makeFile(panel,mydate,tempRange)
+    panelFilename = makeFile(panel,tempRange)
     #p2Filename = makeFile(panel2,mydate,panel2TempDir)
     #print(f'files made, running histogram mode for threshold sweep for temp range {tempDir}')
-    panelFileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempRange}/{mydate}/histogramRuns'
+    panelFileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempRange}/histogramRuns'
     #p2FileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel2TempDir}/{mydate}/histogramRuns'
     #print(panelFilename)
     #print(p2FileDir)
@@ -148,7 +150,7 @@ def main():
         print(f'panel {panel} number of files at start {panelStartFiles} number after run try {(panelNumFiles)}')
         
 
-    statusDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempRange}/{mydate}'
+    statusDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempRange}'
 
     #readTempFile = os.path.join(tempDir, temp_dir_list[0])
     print(f'writing status file at {statusDir}')
@@ -157,8 +159,8 @@ def main():
 
 
 
-def makeFile(panel,mydate,tempDir):
-    runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'
+def makeFile(panel,tempDir):
+    runDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{tempDir}/thresholdSweeps'
     #runDir = f'runs/normalizationRuns/{tempDir}/{mydate}/thresholdSweeps'
     here = os.path.dirname(os.path.abspath(__file__))
     if os.path.exists(os.path.join(here, runDir)):

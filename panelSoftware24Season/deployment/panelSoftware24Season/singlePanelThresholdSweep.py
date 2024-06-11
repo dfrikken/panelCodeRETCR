@@ -98,7 +98,7 @@ def main():
 
 
 
-    for i in range(1,40-nThreshRan):
+    for i in range(1,60-nThreshRan):
         threshold= lastThresh - i*10
         #threshold= 2000 - i*10 #lab value
         print(f'threshold value for run is {threshold}')

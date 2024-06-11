@@ -77,8 +77,25 @@ def main(startVoltage=2800,nRuns=20):
     #p2FileDir = f'/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/{panel2TempDir}/{mydate}/histogramRuns'
     #print(p1FileDir)
     #print(p2FileDir)
-    
-    for i in range(nRuns):
+
+    if os.path.isfile(p1Filename):
+        with open(p1Filename) as f1:
+            inList = f1.readlines()
+            #for i in inList:
+                #print(i)
+            
+            nGainRan = len(inList)-1
+            startVoltage = int(inList[-1].split(',')[1])
+            print(startVoltage, nGainRan)
+        
+    else:
+        startVoltage = 2800
+        nGainRan = 0
+
+
+
+
+    for i in range(20-nGainRan):
         voltage = startVoltage - i*5
         print(f'running panels at voltage setting {voltage}\n')
      

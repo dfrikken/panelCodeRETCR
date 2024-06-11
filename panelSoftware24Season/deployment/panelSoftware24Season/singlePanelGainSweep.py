@@ -85,7 +85,7 @@ def main(startVoltage=2800,nRuns=20):
                 #print(i)
             
             nGainRan = len(inList)-1
-            startVoltage = int(inList[-1].split(',')[1])
+            startVoltage = int(inList[-1].split(',')[0])
             print(startVoltage, nGainRan)
         
     else:
@@ -95,7 +95,7 @@ def main(startVoltage=2800,nRuns=20):
 
 
 
-    for i in range(nRuns-nGainRan):
+    for i in range(0,nRuns-nGainRan):
         voltage = startVoltage - i*5
         print(f'running panels at voltage setting {voltage}\n')
      

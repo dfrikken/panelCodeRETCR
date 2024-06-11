@@ -1077,9 +1077,9 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
                 gainRan=1
                 with open(f'{gainDir}/{i}', 'r') as f1:
                     numInGainFile = len(f1.readlines())-1
-                if numInGainFile < 20:
+                if numInGainFile < 30:
                     gainRan = 0
-        print(f'number in gain file is {numInGainFile} of 20')
+        print(f'number in gain file is {numInGainFile} of 30')
          #if no gain files 
         if len(gain_dir_list) ==0 or gainRan ==0:
             print(f'current panel {panel} temp is {panelTemp} and the temperature directory {tempRange} is empty, running bias and threshold sweep')

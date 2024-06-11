@@ -1076,7 +1076,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
                 print(f'gain sweep for panel {panel} found')
                 gainRan=1
                 with open(f'{gainDir}/{i}', 'r') as f1:
-                    numInGainFile = f1.readlines()-1
+                    numInGainFile = len(f1.readlines())-1
                 if numInGainFile < 20:
                     gainRan = 0
          #if no gain files 

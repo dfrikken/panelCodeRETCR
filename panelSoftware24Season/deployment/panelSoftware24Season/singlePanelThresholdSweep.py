@@ -92,7 +92,7 @@ def main():
             print(lastThresh, nThreshRan)
         
     else:
-        lastThresh = 2800
+        lastThresh = 2900
         nThreshRan = 0
 
 

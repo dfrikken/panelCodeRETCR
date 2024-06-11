@@ -762,6 +762,7 @@ def getPanelTemp(panelToRun, ser):
     #print(kelvinToCelcius(temp))
     return kelvinToCelcius(float(temp))
 
+#old version lol dont use
 def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
     
    

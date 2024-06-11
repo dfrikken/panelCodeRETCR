@@ -52,7 +52,7 @@ def main():
     print(f'using files from {path}')
 
     dir_list = os.listdir(path)
-\
+
 
     
     myDir = f'{path}/histogramRuns'
@@ -93,7 +93,7 @@ def main():
                         for j in range(int(y)):
                             xList.append(int(x))
                 n, bins, patches = plt.hist(xList,bins=200,histtype='step',range=(700,4000))
-                mip = fitLandau(n,bins,run,panel,f'{path}') 
+                mip = fitLandau(n,bins,run,panel,f'{path}/{fileList[-1]}') 
                 print(mip)
                 mipList.append(mip)
                 #print(f'{voltage},{threshold},{mip}')

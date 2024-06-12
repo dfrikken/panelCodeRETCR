@@ -18,7 +18,7 @@ from multiprocessing import Process
 
 
 global logDir
-logDir = "logs/"
+logDir = "/home/retcr/deployment/panelSoftware24Season/logs/"
 #global serialPort
 
 '''

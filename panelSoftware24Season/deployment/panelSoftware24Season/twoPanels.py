@@ -103,7 +103,7 @@ def main():
             print(f'p1 {p1.is_alive()}')
             print(f'p2 {p2.is_alive()}')
             restart(p1,p2)
-            time.sleep(1)
+            time.sleep(.5)
             p1 = start1(triggerRate)
             time.sleep(.1)
             p2 = start2(triggerRate)
@@ -140,7 +140,7 @@ def restart(p1,p2):
     if p2.is_alive():
         os.kill(p2.pid, signal.SIGINT)
     timeOff = time.time_ns()
-    powerCycleLogger(timeOff)
+    
     time.sleep(.5)
     p1.terminate()
     p2.terminate()
@@ -159,8 +159,9 @@ def restart(p1,p2):
         time.sleep(1)
         panelStart = hit.panelStartup()
         if panelStart ==1:
-            time.sleep(1)
+            time.sleep(.5)
             break
+    powerCycleLogger(timeOff)
 
 
 def powerCycleLogger(startTime):

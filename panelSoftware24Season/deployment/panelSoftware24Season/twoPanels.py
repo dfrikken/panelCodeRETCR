@@ -141,7 +141,7 @@ def restart(p1,p2):
         os.kill(p2.pid, signal.SIGINT)
     timeOff = time.time_ns()
     
-    time.sleep(.5)
+    #time.sleep(.5)
     p1.terminate()
     p2.terminate()
 
@@ -156,10 +156,10 @@ def restart(p1,p2):
     while True:
         print("\n\n\npower cycling\n\n\n")
         hit.powerCycle()
-        time.sleep(1)
+        time.sleep(.3)
         panelStart = hit.panelStartup()
         if panelStart ==1:
-            time.sleep(.5)
+            time.sleep(.3)
             break
     powerCycleLogger(timeOff)
 

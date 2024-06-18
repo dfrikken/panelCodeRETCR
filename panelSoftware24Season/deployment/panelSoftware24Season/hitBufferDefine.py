@@ -410,10 +410,10 @@ def collect_output(serial, decode=True):
     slept = False
     if decode:
         out = ''
-        endTime = startTime + timedelta(seconds=.1)
+        #endTime = startTime + timedelta(seconds=.1)
     else:
         out = bytearray()
-        endTime = startTime + timedelta(seconds=1)
+        #endTime = startTime + timedelta(seconds=1)
     nTimes = 0
     while datetime.datetime.now() < endTime:
         n = serial.inWaiting()

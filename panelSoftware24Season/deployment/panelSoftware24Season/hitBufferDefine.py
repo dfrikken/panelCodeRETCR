@@ -410,10 +410,10 @@ def collect_output(serial, decode=True):
     slept = False
     if decode:
         out = ''
-        #endTime = startTime + timedelta(seconds=.1)
+        endTime = startTime + timedelta(seconds=.1)
     else:
         out = bytearray()
-        #endTime = startTime + timedelta(seconds=1)
+        endTime = startTime + timedelta(seconds=1)
     nTimes = 0
     while datetime.datetime.now() < endTime:
         n = serial.inWaiting()
@@ -658,6 +658,8 @@ def powerCycle():
     # gpio pin 2 controls the 24V power
     #gpio pin for OSU SUDL is not on 2
     pin =2
+    if os.environ['powerPin'] and int(os.environ['powerPin']) !=2:
+        pin = 26
     #pin = int(os.environ['powerPin'])
     print(f'power pin is {pin}')
     import RPi.GPIO as gpio

@@ -643,7 +643,11 @@ def panelStartup():
         for t in range(5):
             #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
             outLine = cmdline("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
-            time.sleep(.4)
+            #for line in outLine:
+            #    print(line)
+            #if 'Starting' in outLine:
+            #    break
+            #time.sleep(.3)
             #print(outLine)
 
             if 'done' in str(outLine):
@@ -652,6 +656,7 @@ def panelStartup():
                 break
     if panelUp ==2:
         print('both panels active')
+        time.sleep(1)
         return 1
 
 def powerCycle():
@@ -670,11 +675,11 @@ def powerCycle():
     print("high = off")
     gpio.output(pin, gpio.HIGH)
 
-    time.sleep(.3)
+    time.sleep(.2)
 
     print("low = on")
     gpio.output(pin, gpio.LOW)
-    time.sleep(.3)
+    #time.sleep(.2)
 
 def closest(list, Number):
     aux = []
@@ -751,15 +756,16 @@ def getPanelTemp(panelToRun, ser):
     #print('test')
     #t = cmdLoop('getmon', ser)
     #print(t)
-    outRaw = cmdLoop('getmon', ser)
+    #outRaw = cmdLoop('getmon', ser)
     #print(outRaw)
-    outUID = cmdLoop('get_uid', ser)
+    #outUID = cmdLoop('get_uid', ser)
     #print(outUID)
     temp = (cmdLoop('getmon', ser).strip().split()[1])
+    #print(temp)
     if temp == 'OK':
         temp = (cmdLoop('getmon', ser).strip().split()[1])
     
-    print(f'panel {panelToRun} temp is {kelvinToCelcius(float(temp))}')
+    print(f'panel {panelToRun} temp is {kelvinToCelcius(float(temp))} C')
     #ser.close()
     #print(kelvinToCelcius(temp))
     return kelvinToCelcius(float(temp))
@@ -1002,14 +1008,38 @@ def readMipFile(panel, dataDir):
     
     targetMIP = 1200
     mipCloseIndex = closest(mipFromFit,targetMIP)
-    print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at threshold {threshFromMip[mipCloseIndex]}')
+    print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at bias voltage {threshFromMip[mipCloseIndex]}')
     return threshFromMip[mipCloseIndex]
+
+def fitMipLinear(panel,dataDir):
+    import numpy as np
+    with open(f'{dataDir}/panel{panel}_MIPPeaks.txt') as mipFile:
+        inList = mipFile.readlines()
+        biasFromMip = []
+        mipFromFit = []
+        for i in inList:
+            #print(i)
+            spl = i.split(',')
+            biasFromMip.append(int(spl[0].strip('\n')))
+            mipFromFit.append(float(spl[2].strip('\n')))
+
+        #print(mipFromFit)
+    
+    targetMIP = 1200
+    slope, intercept = np.polyfit(biasFromMip, mipFromFit, deg=1)
+    print(slope,intercept)
+    xVal = (targetMIP - intercept)/slope
+    print(f'value from linear fit = {xVal}')
+    mipCloseIndex = closest(mipFromFit,targetMIP)
+    print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at bias Voltage {biasFromMip[mipCloseIndex]}')
+    return biasFromMip[mipCloseIndex]
+    
 
 def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
 
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     dir_list = os.listdir(path)
-    #print(dir_list)
+    print(dir_list)
     fileList = []
     for i in dir_list:
         fileList.append(i)
@@ -1221,6 +1251,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
                     gainInList = f.readlines()
                 numInGainFile = len(gainInList)-1
                 #print(numInGainFile)
+
 
         
 

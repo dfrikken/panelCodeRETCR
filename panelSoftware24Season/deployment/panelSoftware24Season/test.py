@@ -31,6 +31,7 @@ useGPIO = 0
 
 def main():
     hit.testFunction(3000)
+    '''
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     here = os.path.dirname(path)
 
@@ -40,15 +41,26 @@ def main():
             dirName = f'{i}_{i+5}'
             if not os.path.exists(os.path.join(here, dirName)):
                 os.makedirs(os.path.join(here, dirName))
-
+    
+    '''
+    dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/20_25'
+    hit.fitMipLinear(12, dir)
+    hit.readMipFile(12,dir)
+    '''
+    startTime = time.time_ns()
     hit.powerCycle()
-    time.sleep(.5)
+    #time.sleep(.5)
     hit.panelStartup()
     time.sleep(.5)
-
+    endTime = time.time_ns()
     panel = str(12)
     ser = serial.Serial()
     temp = hit.getPanelTemp(panel, ser)
+    temp = hit.getPanelTemp(panel, ser)
+    print(f'time to power cycle is {(endTime - startTime)/1e9}')
+    
+    '''
+  
     #hit.getThresholdAndVoltageSingle(panel,temp,300)
     #settingsList = hit.getThresholdAndVoltageNew(panel,temp,300)
     #ser = serial.Serial()

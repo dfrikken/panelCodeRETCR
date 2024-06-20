@@ -156,7 +156,7 @@ def restart(p1,p2):
     while True:
         print("\n\n\npower cycling\n\n\n")
         hit.powerCycle()
-        time.sleep(.3)
+        #time.sleep(.3)
         panelStart = hit.panelStartup()
         if panelStart ==1:
             time.sleep(.3)

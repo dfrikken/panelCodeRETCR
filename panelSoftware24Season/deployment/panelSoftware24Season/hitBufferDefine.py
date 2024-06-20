@@ -1027,11 +1027,11 @@ def fitMipLinear(panel,dataDir):
     
     targetMIP = 1200
     slope, intercept = np.polyfit(biasFromMip, mipFromFit, deg=1)
-    print(slope,intercept)
+    #print(slope,intercept)
     xVal = (targetMIP - intercept)/slope
     print(f'value from linear fit = {round(xVal)}')
-    mipCloseIndex = closest(mipFromFit,targetMIP)
-    print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at bias Voltage {biasFromMip[mipCloseIndex]}')
+    #mipCloseIndex = closest(mipFromFit,targetMIP)
+    #print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at bias Voltage {biasFromMip[mipCloseIndex]}')
     return int(round(xVal))
     
 def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):

@@ -43,7 +43,7 @@ def main():
                 os.makedirs(os.path.join(here, dirName))
     
     '''
-    dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/20_25'
+    dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/-15_-10'
     panel = os.environ['panel1']
     hit.fitMipLinear(panel, dir)
     hit.readMipFile(panel,dir)

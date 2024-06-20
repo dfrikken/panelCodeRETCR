@@ -30,7 +30,7 @@ useGPIO = 0
 
 
 def main():
-    hit.testFunction(3000)
+    #hit.testFunction(3000)
     '''
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     here = os.path.dirname(path)

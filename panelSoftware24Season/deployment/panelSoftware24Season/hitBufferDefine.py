@@ -176,7 +176,7 @@ def resetUDaq(ser): #error log entry made
     for msg in commands:
         if cmdLoop(msg, ser, ntry=5) is None:
             errorLogger('error reseting uDAQ, may be unresponsive')
-            sys.exit()
+            #sys.exit()
 
     print("uDAQ reset\n")
 
@@ -220,7 +220,7 @@ def init(ser,args): #error log entry made
     for msg in commands:
         if cmdLoop(msg, ser) is None:
             errorLogger('error initializing uDAQ, may be unresponsive')
-            sys.exit()
+            #sys.exit()
 
 def scheduleTriggers(ser,pin,rundir,seconds=2): #error log entry made
     scheduledTriggerFile = open(rundir+"/scheduledTriggers.txt","a")
@@ -396,7 +396,7 @@ def cmdLoop(msg, serial, ntry=15, decode=True): #error log entry made
                 serial.flushOutput()
     print('ERROR: giving up')
     errorLogger('error in serial comms with uDAQ')
-    sys.exit()
+    #sys.exit()
     #checkUDAQResponse(serial)
 
 def collect_output(serial, decode=True): 

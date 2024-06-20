@@ -204,6 +204,7 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
 
                     dump = hit.cmdLoop('dump_hits_binary', ser, ntry=5, decode=False) 
                     if dump is not None:
+                        hit.infoLogger('dumping buffer')
                         data.append(dump)
                         for dump in data:
                             bfile.write(hit.cobsDecode(dump))

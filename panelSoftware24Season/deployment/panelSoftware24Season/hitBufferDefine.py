@@ -956,6 +956,8 @@ def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
         for i in dir_list:
             if f'panel{panel}' in i:
                 myFile+=i
+                break
+                
         #print(myFile)
         with open(myFile, 'r') as f:
             settingsList = []

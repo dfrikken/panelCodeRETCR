@@ -198,6 +198,7 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
                     beginTime = time.time_ns()
                     if out is None:
                             print('no data in dump')
+                            hit.infoLogger('out is none error')
                             hit.errorLogger("error: no data in buffer")
                             #break
 

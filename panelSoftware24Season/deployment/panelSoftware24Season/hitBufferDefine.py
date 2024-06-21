@@ -1016,7 +1016,7 @@ def readMipFile(panel, dataDir):
     return threshFromMip[mipCloseIndex]
 
 def fitMipLinear(panel,dataDir):
-    import numpy as np
+    
     with open(f'{dataDir}/panel{panel}_MIPPeaks.txt') as mipFile:
         inList = mipFile.readlines()
         biasFromMip = []
@@ -1037,6 +1037,21 @@ def fitMipLinear(panel,dataDir):
     #mipCloseIndex = closest(mipFromFit,targetMIP)
     #print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at bias Voltage {biasFromMip[mipCloseIndex]}')
     return int(round(xVal))
+
+def fitThreshCurve(panel, dataDir):
+    threshDir = f'{tempDir}/thresholdSweeps'
+    if os.path.isdir(threshDir):
+        thresh_dir_list = os.listdir(threshDir)
+    else:
+        thresh_dir_list=[]
+    threshRan = 0
+    for i in thresh_dir_list:
+        if f'panel{panel}' in i:
+            print(f'threshold sweep for panel {panel} found')
+            myFile = f'{dataDir}/{i}'
+            print(myFile)
+
+    #with open(f'{dataDir}/panel{panel}_MIPPeaks.txt') as threshFile:
     
 def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
 
@@ -1217,6 +1232,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
         for i in dir_list:
             if f'panel{panel}' in i:
                 myFile+=i
+                break
         #print(myFile)
         with open(myFile, 'r') as f:
             settingsList = []
@@ -1230,10 +1246,11 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
                 rateList.append(float(split[2]))
         
         #print(rateList)
-        panelVoltage = readMipFile(panel, mipDir)
+        #panelVoltage = readMipFile(panel, mipDir)
+        panelVoltage = fitMipLinear(panel, mipDir)
         myIndex = closest(rateList,trigRate)
         print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
-        #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
+        print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
         #signal.alarm(srTime*2)
         return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
 

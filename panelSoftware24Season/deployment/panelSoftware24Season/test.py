@@ -43,14 +43,16 @@ def main():
                 os.makedirs(os.path.join(here, dirName))
     
     '''
-    dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/-15_-10'
+    dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/-25_-20'
     panel = os.environ['panel1']
     set1 = hit.fitMipLinear(panel, dir)
     set2 = hit.readMipFile(panel,dir)
+    hit.fitThreshCurve(panel,dir)
     print(set1,set2)
     panel = os.environ['panel2']
     set1 = hit.fitMipLinear(panel, dir)
     set2 = hit.readMipFile(panel,dir)
+    hit.fitThreshCurve(panel,dir)
     print(set1,set2)
     '''
     startTime = time.time_ns()

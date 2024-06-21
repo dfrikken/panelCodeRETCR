@@ -1057,9 +1057,10 @@ def fitThreshCurve(panel, dataDir,targetRate):
         trigRateList = []
         rl = threshFile.readlines()
         for k in rl:
-            split = k.split(',')
-            threshList.append(int(split[1]))
-            trigRateList.append(float(split[2]))
+            if 'voltage' not in k:
+                split = k.split(',')
+                threshList.append(int(split[1]))
+                trigRateList.append(float(split[2]))
 
     x = np.array(threshList)
     y = np.array(trigRateList)

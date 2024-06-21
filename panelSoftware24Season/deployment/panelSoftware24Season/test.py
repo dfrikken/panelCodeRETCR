@@ -45,13 +45,13 @@ def main():
     '''
     dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/-15_-10'
     panel = os.environ['panel1']
-    hit.fitMipLinear(panel, dir)
-    hit.readMipFile(panel,dir)
-
+    set1 = hit.fitMipLinear(panel, dir)
+    set2 = hit.readMipFile(panel,dir)
+    print(set1,set2)
     panel = os.environ['panel2']
-    hit.fitMipLinear(panel, dir)
-    hit.readMipFile(panel,dir)
-
+    set1 = hit.fitMipLinear(panel, dir)
+    set2 = hit.readMipFile(panel,dir)
+    print(set1,set2)
     '''
     startTime = time.time_ns()
     hit.powerCycle()

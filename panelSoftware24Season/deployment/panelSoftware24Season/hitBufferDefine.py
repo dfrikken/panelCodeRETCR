@@ -1052,7 +1052,7 @@ def fitThreshCurve(panel, dataDir,targetRate):
             break
             #print(myFile)
 
-    with open(myfile,'r') as threshFile:
+    with open(myFile,'r') as threshFile:
         threshList = []
         trigRateList = []
         rl = threshFile.readlines()

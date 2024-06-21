@@ -1062,18 +1062,22 @@ def fitThreshCurve(panel, dataDir,targetRate):
                 threshList.append(int(split[1]))
                 trigRateList.append(float(split[2]))
 
-    x = np.array(threshList)
-    y = np.array(trigRateList)
-    p1 = np.polyfit(x, np.log(y), 1)
+    #x = np.array(threshList)
+    #y = np.array(trigRateList)
+    #p1 = np.polyfit(x, np.log(y), 1)
+    #fitVal = round((np.log(targetRate) - p1[1])/p1[0])
+    #print(f'fit value for threshold is {fitVal} ')
 
-    
-    fitVal = round((np.log(targetRate) - p1[1])/p1[0])
-    print(f'fit value for threshold is {fitVal} ')
-    #trigRate = targetRate
-    #myIndex = closest(trigRateList,trigRate)
-    #print(f"nearest trigger rate to {trigRate} is {trigRateList[myIndex]} at threshold {threshList[myIndex]}")
-    #print(np.exp(p1[0] * fitVal  + p1[1]))
-    return fitVal
+    p = np.polyfit(threshList, trigRateList, 2)
+    indexes = threshList
+    threshArray = np.array(threshList)
+    valArray = np.array(trigRateList)
+    r = np.roots(np.polyfit(threshArray, valArray - targetRate, 2))
+    rootValues = r.real[abs(r.imag) < 1E-6]
+    for root in rootValues:
+        if root < 3000:
+            rootVal = round(root)
+    return rootVal
 
     
 def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):

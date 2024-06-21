@@ -47,12 +47,12 @@ def main():
     panel = os.environ['panel1']
     set1 = hit.fitMipLinear(panel, dir)
     set2 = hit.readMipFile(panel,dir)
-    hit.fitThreshCurve(panel,dir)
+    hit.fitThreshCurve(panel,dir,300)
     print(set1,set2)
     panel = os.environ['panel2']
     set1 = hit.fitMipLinear(panel, dir)
     set2 = hit.readMipFile(panel,dir)
-    hit.fitThreshCurve(panel,dir)
+    hit.fitThreshCurve(panel,dir,300)
     print(set1,set2)
     '''
     startTime = time.time_ns()

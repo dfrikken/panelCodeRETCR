@@ -1038,7 +1038,7 @@ def fitMipLinear(panel,dataDir):
     #print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at bias Voltage {biasFromMip[mipCloseIndex]}')
     return int(round(xVal))
 
-def fitThreshCurve(panel, dataDir):
+def fitThreshCurve(panel, dataDir,targetRate):
     threshDir = f'{dataDir}/thresholdSweeps'
     if os.path.isdir(threshDir):
         thresh_dir_list = os.listdir(threshDir)
@@ -1049,9 +1049,27 @@ def fitThreshCurve(panel, dataDir):
         if f'panel{panel}' in i:
             print(f'threshold sweep for panel {panel} found')
             myFile = f'{dataDir}/{i}'
-            print(myFile)
+            break
+            #print(myFile)
 
-    #with open(f'{dataDir}/panel{panel}_MIPPeaks.txt') as threshFile:
+    with open(myfile,'r') as threshFile:
+        threshList = []
+        trigRateList = []
+        rl = threshFile.readlines()
+        for k in rl:
+            split = k.split(',')
+            threshList.append(int(split[1]))
+            trigRateList.append(float(split[2]))
+
+    x = np.array(threshList)
+    y = np.array(trigRateList)
+    p1 = np.polyfit(x, np.log(y), 1)
+
+    
+    fitVal = (np.log(targetRate) - p1[1])/p1[0]
+    print(fitVal)
+    print(np.exp(p1[0] * fitVal  + p1[1]))
+
     
 def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
 

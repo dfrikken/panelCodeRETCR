@@ -1055,10 +1055,12 @@ def fitThreshCurve(panel, dataDir,targetRate):
     with open(myFile,'r') as threshFile:
         threshList = []
         trigRateList = []
+        
         rl = threshFile.readlines()
         for k in rl:
             if 'voltage' not in k:
                 split = k.split(',')
+                gain = int(split[0])
                 threshList.append(int(split[1]))
                 trigRateList.append(float(split[2]))
 
@@ -1077,6 +1079,7 @@ def fitThreshCurve(panel, dataDir,targetRate):
     for root in rootValues:
         if root < 3000:
             rootVal = round(root)
+    print(f'trigger rate of {targetRate} at gain {gain} at threshold of {rootVal} ADC')
     return rootVal
 
     

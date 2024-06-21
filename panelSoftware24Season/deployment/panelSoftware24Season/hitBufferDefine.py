@@ -767,7 +767,7 @@ def getPanelTemp(panelToRun, ser):
         temp = (cmdLoop('getmon', ser).strip().split()[1])
     
     print(f'panel {panelToRun} temp is {kelvinToCelcius(float(temp))} C')
-    infoLogger(f'panel {panel} temp is {temp}')
+    infoLogger(f'panel {panelToRun} temp is {temp}')
     #ser.close()
     #print(kelvinToCelcius(temp))
     return kelvinToCelcius(float(temp))

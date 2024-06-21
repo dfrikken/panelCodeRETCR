@@ -663,8 +663,9 @@ def powerCycle():
     # gpio pin 2 controls the 24V power
     #gpio pin for OSU SUDL is not on 2
     pin =2
-    if os.environ['powerPin'] and int(os.environ['powerPin']) !=2:
-        pin = 26
+    if 'powerPin' in os.environ:
+        #if int(os.environ['powerPin']) !=2:
+        pin = int(os.environ['powerPin']) #osu station pin is 26
     #pin = int(os.environ['powerPin'])
     print(f'power pin is {pin}')
     import RPi.GPIO as gpio

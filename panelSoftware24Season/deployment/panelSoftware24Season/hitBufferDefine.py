@@ -1039,7 +1039,7 @@ def fitMipLinear(panel,dataDir):
     return int(round(xVal))
 
 def fitThreshCurve(panel, dataDir):
-    threshDir = f'{tempDir}/thresholdSweeps'
+    threshDir = f'{dataDir}/thresholdSweeps'
     if os.path.isdir(threshDir):
         thresh_dir_list = os.listdir(threshDir)
     else:

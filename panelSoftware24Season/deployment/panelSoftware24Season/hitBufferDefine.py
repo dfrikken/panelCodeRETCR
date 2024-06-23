@@ -1050,7 +1050,7 @@ def fitThreshCurve(panel, dataDir,targetRate):
         if f'panel{panel}' in i:
             print(f'threshold sweep for panel {panel} found')
             myFile = f'{threshDir}/{i}'
-            print(myFile)
+            print(f'myFile is {threshDir}/{i}')
             break
             #print(myFile)
     print(myFile)

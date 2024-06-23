@@ -27,7 +27,7 @@ def main():
     #time.sleep(1)
     ################
     global triggerRate
-    triggerRate = 500
+    triggerRate = 300
 
     global useGPIO
     useGPIO = 1

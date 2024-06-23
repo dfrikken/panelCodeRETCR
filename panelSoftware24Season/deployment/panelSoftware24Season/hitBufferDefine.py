@@ -1045,13 +1045,14 @@ def fitThreshCurve(panel, dataDir,targetRate):
     else:
         thresh_dir_list=[]
     threshRan = 0
+    print(thresh_dir_list)
     for i in thresh_dir_list:
         if f'panel{panel}' in i:
             print(f'threshold sweep for panel {panel} found')
             myFile = f'{threshDir}/{i}'
             break
             #print(myFile)
-
+    print(myFile)
     with open(myFile,'r') as threshFile:
         threshList = []
         trigRateList = []

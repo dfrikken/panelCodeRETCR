@@ -54,6 +54,9 @@ def main():
     set2 = hit.readMipFile(panel,dir)
     hit.fitThreshCurve(panel,dir,300)
     print(set1,set2)
+
+
+   
     '''
     startTime = time.time_ns()
     hit.powerCycle()

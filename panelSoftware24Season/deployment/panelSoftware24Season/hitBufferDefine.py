@@ -1158,8 +1158,8 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
                 gainRan=1
                 with open(f'{gainDir}/{i}', 'r') as f1:
                     numInGainFile = len(f1.readlines())-1
-                if numInGainFile < 30:
-                    gainRan = 0
+                #if numInGainFile < 29:
+                    #gainRan = 0
         print(f'number in gain file is {numInGainFile} of 30')
          #if no gain files 
         if len(gain_dir_list) ==0 or gainRan ==0:
@@ -1279,11 +1279,14 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
         #print(rateList)
         #panelVoltage = readMipFile(panel, mipDir)
         panelVoltage = fitMipLinear(panel, mipDir)
-        myIndex = closest(rateList,trigRate)
-        print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
-        print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
+        panelThreshold = fitThreshCurve(panel, threshDir,trigRate)
+        print(f'panel {panel} target rate {trigRate} voltage from linear MIP fit {panelVoltage} threshold {panelThreshold}')
+        #myIndex = closest(rateList,trigRate)
+        #print(f"nearest trigger rate to {trigRate} is {rateList[myIndex]} at voltage {settingsList[myIndex+2].split(',')[0]} threshold {settingsList[myIndex+2].split(',')[1]}")
+        #print(rateList[myIndex], settingsList[myIndex+2].split(',')[0],settingsList[myIndex+2].split(',')[1], settingsList[myIndex+2].split(',')[3])
         #signal.alarm(srTime*2)
-        return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
+        return [int(panelThreshold), int(panelVoltage)]
+        #return [int(settingsList[myIndex+2].split(',')[1]),int(settingsList[myIndex+2].split(',')[0])]
 
 
 

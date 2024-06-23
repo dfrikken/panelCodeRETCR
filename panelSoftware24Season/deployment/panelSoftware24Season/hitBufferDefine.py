@@ -396,7 +396,7 @@ def cmdLoop(msg, serial, ntry=15, decode=True): #error log entry made
                 serial.flushOutput()
     print('ERROR: giving up')
     errorLogger('error in serial comms with uDAQ')
-    #sys.exit()
+    sys.exit()
     #checkUDAQResponse(serial)
 
 def collect_output(serial, decode=True): 
@@ -1087,7 +1087,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
 
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     dir_list = os.listdir(path)
-    print(dir_list)
+    #print(dir_list)
     fileList = []
     for i in dir_list:
         fileList.append(i)
@@ -1100,6 +1100,7 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
             break
 
     tempDir = os.path.join(path, tempDir)
+    print(tempDir)
     temp_dir_list = os.listdir(tempDir)
     temp_dir_list.sort()
 

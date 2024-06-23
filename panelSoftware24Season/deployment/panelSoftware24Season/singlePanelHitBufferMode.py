@@ -196,10 +196,10 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
                 
                     #dump panel data from buffer and write to the .bin
                     beginTime = time.time_ns()
-                    if out is None:
-                            print('no data in dump')
-                            hit.infoLogger('out is none error')
-                            hit.errorLogger("error: no data in buffer")
+                    #if out is None:
+                    #        print('no data in dump')
+                    #        hit.infoLogger('out is none error')
+                    #        hit.errorLogger("error: no data in buffer")
                             #break
 
                     dump = hit.cmdLoop('dump_hits_binary', ser, ntry=5, decode=False) 

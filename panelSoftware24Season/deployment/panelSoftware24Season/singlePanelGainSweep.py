@@ -22,7 +22,7 @@ import histogramMode as hm
 
 
 
-def main(startVoltage=2800,nRuns=30):
+def main(startVoltage=2800,nRuns=15):
     ap = argparse.ArgumentParser()
     ap.add_argument('-p', '--panel', dest='panel', type=str, default=12)
     args = ap.parse_args()
@@ -52,7 +52,7 @@ def main(startVoltage=2800,nRuns=30):
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if panel1Temp in range(bottom,top):
+        if bottom<=panel1Temp<=top:# in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i
@@ -96,7 +96,7 @@ def main(startVoltage=2800,nRuns=30):
 
 
     for i in range(0,nRuns-nGainRan):
-        voltage = startVoltage - i*5
+        voltage = startVoltage - i*10
         print(f'running panels at voltage setting {voltage}\n')
      
         if os.path.isdir(p1FileDir):

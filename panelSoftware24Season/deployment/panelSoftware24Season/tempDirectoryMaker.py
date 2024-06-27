@@ -38,10 +38,10 @@ print(tempDir)
 path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
 here = os.path.dirname(path)
 print(here)
-for i in range(-40,10):
-    if i%5 ==0:
-        print(f'{i}_{i+5}')
-        dirName = f'{i}_{i+5}'
+for i in range(-40,25):
+    if i%3 ==0:
+        print(f'{i}_{i+2}')
+        dirName = f'{i}_{i+2}'
         test = os.path.join(here, dirName)
         print(test)
         os.makedirs(os.path.join(here, dirName))

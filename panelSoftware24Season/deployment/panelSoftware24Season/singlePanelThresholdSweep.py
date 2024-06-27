@@ -43,7 +43,7 @@ def main():
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if panelTemp in range(bottom,top):
+        if bottom<=panelTemp<=top:# in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i
@@ -99,8 +99,8 @@ def main():
 
 
 
-    for i in range(1,60-nThreshRan):
-        threshold= lastThresh - i*10
+    for i in range(1,20-nThreshRan):
+        threshold= lastThresh - i*50
         #threshold= 2000 - i*10 #lab value
         print(f'threshold value for run is {threshold}')
         #print(f'running panels at voltage setting {voltage} threshold {threshold} for {runTime} seconds\n')

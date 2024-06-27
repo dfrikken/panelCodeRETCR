@@ -43,6 +43,8 @@ def main():
                 os.makedirs(os.path.join(here, dirName))
     
     '''
+
+    '''
     dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/-25_-20'
     panel = os.environ['panel1']
     set1 = hit.fitMipLinear(panel, dir)
@@ -55,22 +57,26 @@ def main():
     hit.fitThreshCurve(panel,dir,300)
     print(set1,set2)
 
+    '''
+
 
    
-    '''
+    
     startTime = time.time_ns()
     hit.powerCycle()
     #time.sleep(.5)
     hit.panelStartup()
-    time.sleep(.5)
+    #time.sleep(.5)
     endTime = time.time_ns()
     panel = str(12)
     ser = serial.Serial()
     temp = hit.getPanelTemp(panel, ser)
     temp = hit.getPanelTemp(panel, ser)
     print(f'time to power cycle is {(endTime - startTime)/1e9}')
+    panel = str(3)
+    ser = serial.Serial()
+    temp = hit.getPanelTemp(panel, ser)
     
-    '''
   
     #hit.getThresholdAndVoltageSingle(panel,temp,300)
     #settingsList = hit.getThresholdAndVoltageNew(panel,temp,300)

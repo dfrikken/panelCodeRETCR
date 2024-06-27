@@ -642,9 +642,10 @@ def panelStartup():
         #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
         for t in range(5):
             #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
+            time.sleep(.4)
             outLine = cmdline("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
             #for line in outLine:
-            #    print(line)
+                #print(line)
             #if 'Starting' in outLine:
             #    break
             #time.sleep(.3)
@@ -676,11 +677,11 @@ def powerCycle():
     print("high = off")
     gpio.output(pin, gpio.HIGH)
 
-    time.sleep(.2)
+    time.sleep(.5)
 
     print("low = on")
     gpio.output(pin, gpio.LOW)
-    #time.sleep(.2)
+    time.sleep(.3)
 
 def closest(list, Number):
     aux = []
@@ -819,7 +820,7 @@ def getThresholdAndVoltageNew(panel,panelTemp, trigRate):
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if panelTemp in range(bottom,top):
+        if bottom<=panelTemp<=top:# in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i
@@ -1034,6 +1035,8 @@ def fitMipLinear(panel,dataDir):
     #print(slope,intercept)
     xVal = (targetMIP - intercept)/slope
     print(f'value from linear fit = {round(xVal)}')
+    if int(round(xVal)) > 2800 or int(panel) ==3 or int(panel) ==12:
+        xVal = 2800
     #mipCloseIndex = closest(mipFromFit,targetMIP)
     #print(f'panel {panel} MIP peak nearest target is {mipFromFit[mipCloseIndex]} at bias Voltage {biasFromMip[mipCloseIndex]}')
     return int(round(xVal))
@@ -1079,6 +1082,7 @@ def fitThreshCurve(panel, dataDir,targetRate):
     valArray = np.array(trigRateList)
     r = np.roots(np.polyfit(threshArray, valArray - targetRate, 2))
     rootValues = r.real[abs(r.imag) < 1E-6]
+    print(f'root values are {rootValues}')
     for root in rootValues:
         if root < 3000:
             rootVal = round(root)
@@ -1096,10 +1100,11 @@ def getThresholdAndVoltageSingle(panel,panelTemp, trigRate):
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if panelTemp in range(bottom,top):
+        if bottom<=panelTemp <=top:#in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i
+            print(f'temp dir is {tempDir}')
             break
 
     tempDir = os.path.join(path, tempDir)

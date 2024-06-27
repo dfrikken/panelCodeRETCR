@@ -33,7 +33,7 @@ def main():
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if panelTemp in range(bottom,top):
+        if bottom<=panelTemp<=top:# in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i
@@ -135,7 +135,7 @@ def main():
         fileList.append(i)
         bottom = int(i.split('_')[0])
         top = int(i.split('_')[1])
-        if panelTemp in range(bottom,top):
+        if bottom<=panelTemp<=top:# in range(bottom,top):
             #print(i)
             tempDir = i
             tempRange = i

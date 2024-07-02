@@ -1084,8 +1084,10 @@ def fitThreshCurve(panel, dataDir,targetRate):
     rootValues = r.real[abs(r.imag) < 1E-6]
     print(f'root values are {rootValues}')
     for root in rootValues:
+
         if root < 3000 and root > 1500:
             rootVal = round(root)
+            break
 
         else:
             rootVal = 2300

@@ -681,7 +681,7 @@ def powerCycle():
 
     print("low = on")
     gpio.output(pin, gpio.LOW)
-    time.sleep(.3)
+    time.sleep(.5)
 
 def closest(list, Number):
     aux = []

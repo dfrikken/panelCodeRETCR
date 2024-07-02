@@ -1084,8 +1084,12 @@ def fitThreshCurve(panel, dataDir,targetRate):
     rootValues = r.real[abs(r.imag) < 1E-6]
     print(f'root values are {rootValues}')
     for root in rootValues:
-        if root < 3000:
+        if root < 3000 and root > 1500:
             rootVal = round(root)
+
+        else:
+            rootVal = 2300
+            print('error reading root, setting failsafe to 2300 ADC')
     print(f'trigger rate of {targetRate} at gain {gain} at threshold of {rootVal} ADC')
     return rootVal
 

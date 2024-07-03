@@ -1091,8 +1091,8 @@ def fitThreshCurve(panel, dataDir,targetRate):
 
         else:
             rootVal = 2300
-            print('error reading root, setting failsafe to 2300 ADC')
-    print(f'trigger rate of {targetRate} at gain {gain} at threshold of {rootVal} ADC')
+            print('error reading root value of function, setting failsafe to 2300 ADC')
+    print(f'trigger rate of {targetRate} at threshold of {rootVal} ADC')
     return rootVal
 
     

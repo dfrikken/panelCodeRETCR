@@ -8,8 +8,8 @@ dataDir = '/home/retcr/deployment/panelSoftware24Season/runs'
 
 mainDir = os.listdir(dataDir)
 gpioCounter=0
-fileName = '/home/retcr/deployment/panelSoftware24Season/runs/2024-05-19/hitBufferRuns/panel_1_run_0000023/gpiomon.txt'
-#command = f'gzip {runDir}/gpiomon.txt'
+fileName = '/home/retcr/deployment/panelSoftware24Season/runs/2024-05-19/hitBufferRuns/panel_1_run_0000023/gpioMon.txt'
+#command = f'gzip {runDir}/gpioMon.txt'
 command = f'gzip {fileName}'
 print(command)
 gpioThread = Popen(

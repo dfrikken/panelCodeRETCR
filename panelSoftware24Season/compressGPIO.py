@@ -14,7 +14,7 @@ command = f'gzip {fileName}'
 print(command)
 gpioThread = Popen(
     args=command,
-    shell = False,
+    shell = True,
     stdout=subprocess.PIPE,
     preexec_fn=os.setsid
     

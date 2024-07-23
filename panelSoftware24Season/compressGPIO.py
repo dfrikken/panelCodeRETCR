@@ -10,6 +10,8 @@ mainDir = os.listdir(dataDir)
 
 for n,i in enumerate(mainDir):
     #print(i.strip('\n')[:4])
+    if n > 10:
+        break
     if (i.strip(('\n'))[:4] == '2024'):
         print(i)
         newDir = f'{dataDir}/{i}/hitBufferRuns'
@@ -22,9 +24,9 @@ for n,i in enumerate(mainDir):
             if m > 10:
                 break
             runDir = f'{dayDirList}/{j}'
+            print(runDir)
             #runDirList = os.listdir(runDir)
             #print(runDirList)
-            print('\n')
+        print('\n')
 
-        if n > 10:
-            break
+            

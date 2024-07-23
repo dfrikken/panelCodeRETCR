@@ -8,7 +8,21 @@ dataDir = '/home/retcr/deployment/panelSoftware24Season/runs'
 
 mainDir = os.listdir(dataDir)
 gpioCounter=0
+fileName = '/home/retcr/deployment/panelSoftware24Season/runs/2024-05-19/hitBufferRuns/panel_1_run_0000023/gpiomon.txt'
+#command = f'gzip {runDir}/gpiomon.txt'
+command = f'gzip {fileName}'
+print(command)
+gpioThread = Popen(
+    args=command,
+    shell = False,
+    stdout=subprocess.PIPE,
+    preexec_fn=os.setsid
+    
+)
+gpioThread.wait()
+gpioThread.terminate() 
 
+'''
 for n,i in enumerate(mainDir):
     #print(i.strip('\n')[:4])
     #if n > 2:
@@ -31,7 +45,7 @@ for n,i in enumerate(mainDir):
             if 'gpioMon.txt' in runDirList:
                 #print('gpio file found')
                 gpioCounter+=1
-                '''
+                
                 gpioThread = Popen(
                     args=command,
                     shell = False,
@@ -41,7 +55,7 @@ for n,i in enumerate(mainDir):
                 )
                 gpioThread.wait()
                 gpioThread.terminate()                
-                '''
+                
                 command = f'gzip {runDir}/gpiomon.txt'
                 print(command)
         
@@ -50,5 +64,7 @@ for n,i in enumerate(mainDir):
         
 
 print(f'gpio monitor files found {gpioCounter}')
+'''
+
 
             

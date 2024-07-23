@@ -14,7 +14,7 @@ for n,i in enumerate(mainDir):
     #if n > 2:
     #    break
     if (i.strip(('\n'))[:4] == '2024'):
-        #print(i)
+        print(i)
         newDir = f'{dataDir}/{i}/hitBufferRuns'
         #print(f'{newDir}')
 
@@ -31,7 +31,23 @@ for n,i in enumerate(mainDir):
             if 'gpioMon.txt' in runDirList:
                 #print('gpio file found')
                 gpioCounter+=1
-        #print('\n')
+                '''
+                gpioThread = Popen(
+                    args=command,
+                    shell = False,
+                    stdout=subprocess.PIPE,
+                    preexec_fn=os.setsid
+                    
+                )
+                gpioThread.wait()
+                gpioThread.terminate()                
+                '''
+                command = f'gzip {rundir}/gpiomon.txt'
+                print(command)
+        
+                
+        print(f'{i} finished \n')
+        
 
 print(f'gpio monitor files found {gpioCounter}')
 

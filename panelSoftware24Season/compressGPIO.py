@@ -27,7 +27,9 @@ for n,i in enumerate(mainDir):
             runDir = f'{newDir}/{j}'
             print(runDir)
             runDirList = os.listdir(runDir)
-            print(runDirList)
+            #print(runDirList)
+            if 'gpioMon.txt' in runDirList:
+                print('gpio file found')
         print('\n')
 
             

@@ -18,11 +18,12 @@ for n,i in enumerate(mainDir):
         dayDirList = os.listdir(newDir)
 
         for m, j in enumerate(dayDirList):
+            print(j)
             if m > 10:
                 break
             runDir = f'{dayDirList}/{j}'
-            runDirList = os.listdir(runDir)
-            print(runDirList)
+            #runDirList = os.listdir(runDir)
+            #print(runDirList)
             print('\n')
 
         if n > 10:

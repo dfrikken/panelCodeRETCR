@@ -42,7 +42,7 @@ for n,i in enumerate(mainDir):
                 gpioThread.wait()
                 gpioThread.terminate()                
                 '''
-                command = f'gzip {rundir}/gpiomon.txt'
+                command = f'gzip {runDir}/gpiomon.txt'
                 print(command)
         
                 

@@ -21,7 +21,7 @@ for n,i in enumerate(mainDir):
         dayDirList = os.listdir(newDir)
 
         for m, j in enumerate(dayDirList):
-            print(j)
+            #print(j)
             #if m > 2:
             #    break
             runDir = f'{newDir}/{j}'
@@ -31,7 +31,7 @@ for n,i in enumerate(mainDir):
             if 'gpioMon.txt' in runDirList:
                 #print('gpio file found')
                 gpioCounter+=1
-        print('\n')
+        #print('\n')
 
 print(f'gpio monitor files found {gpioCounter}')
 

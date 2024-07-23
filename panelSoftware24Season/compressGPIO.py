@@ -23,7 +23,7 @@ for n,i in enumerate(mainDir):
             print(j)
             if m > 10:
                 break
-            runDir = f'{dayDirList}/{j}'
+            runDir = f'{newDir}/{j}'
             print(runDir)
             #runDirList = os.listdir(runDir)
             #print(runDirList)

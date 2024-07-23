@@ -31,6 +31,11 @@ useGPIO = 0
 
 def main():
     #hit.testFunction(3000)
+
+
+
+    singlePanelHitBufferMode.main(str(3),1700,2750,300,1)
+
     '''
     path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
     here = os.path.dirname(path)
@@ -57,7 +62,7 @@ def main():
     hit.fitThreshCurve(panel,dir,300)
     print(set1,set2)
 
-    '''
+    
 
 
    
@@ -83,7 +88,7 @@ def main():
     #ser = serial.Serial()
     #temp = hit.getPanelTemp(3, ser)
     #hit.getThresholdAndVoltageNew(3,temp,300)
-
+'''
 
 if __name__ == "__main__":
     main()

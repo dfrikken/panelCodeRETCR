@@ -146,6 +146,13 @@ def main(panelToRun, disc = 1700, voltage = 2650, triggerRate = 100, useGPIO = 0
             serPort.close()
             serNone = serial.Serial()
             temp = hit.getPanelTemp(panel, serNone)
+            if temp < -50:
+                print('temperature read bug. delaying to try again')
+                time.sleep(2)
+                serNone.close()
+                serNone = serial.Serial()
+                temp = hit.getPanelTemp(panel, serNone)
+
             
             
             settingsList = hit.getThresholdAndVoltageSingle(panel,temp,triggerRate)

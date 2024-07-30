@@ -10,85 +10,59 @@ import serial
 from datetime import datetime, timedelta
 import json
 from cobs import cobs
-import hitBufferDefine as hit
 import numpy as np
 import signal
 from threading import Thread
-import singlePanelHitBufferMode as singlePanelHitBufferMode
 import subprocess
 from subprocess import PIPE, Popen
 
 from multiprocessing import Process
 
-################
-global triggerRate
-triggerRate = 100
 
-global useGPIO
-useGPIO = 0
-##################
 
 
 def main():
     #hit.testFunction(3000)
 
-
-
-    singlePanelHitBufferMode.main(str(3),1700,2750,300,1)
-
     '''
-    path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
-    here = os.path.dirname(path)
+        path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
+        here = os.path.dirname(path)
+        listTemps = os.listdir(here)
 
-    for i in range(-40,10):
-        if i%5 ==0:
-            #print(f'{i}_{i+5}')
-            dirName = f'{i}_{i+5}'
-            if not os.path.exists(os.path.join(here, dirName)):
-                os.makedirs(os.path.join(here, dirName))
-    
+        for temp in listTemps:
+            print(f'{temp} \n')
+            tempDir = os.path.join(here,temp)
+            tempDirList= os.listdir(tempDir)
+            print(tempDirList)
+            print('\n\n')
     '''
 
-    '''
-    dir = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/-25_-20'
-    panel = os.environ['panel1']
-    set1 = hit.fitMipLinear(panel, dir)
-    set2 = hit.readMipFile(panel,dir)
-    hit.fitThreshCurve(panel,dir,300)
-    print(set1,set2)
-    panel = os.environ['panel2']
-    set1 = hit.fitMipLinear(panel, dir)
-    set2 = hit.readMipFile(panel,dir)
-    hit.fitThreshCurve(panel,dir,300)
-    print(set1,set2)
+    for tempToTest in range(-23,0):
 
-    
+        panelTemp = float(tempToTest)
 
 
-   
-    
-    startTime = time.time_ns()
-    hit.powerCycle()
-    #time.sleep(.5)
-    hit.panelStartup()
-    #time.sleep(.5)
-    endTime = time.time_ns()
-    panel = str(12)
-    ser = serial.Serial()
-    temp = hit.getPanelTemp(panel, ser)
-    temp = hit.getPanelTemp(panel, ser)
-    print(f'time to power cycle is {(endTime - startTime)/1e9}')
-    panel = str(3)
-    ser = serial.Serial()
-    temp = hit.getPanelTemp(panel, ser)
-    
-  
-    #hit.getThresholdAndVoltageSingle(panel,temp,300)
-    #settingsList = hit.getThresholdAndVoltageNew(panel,temp,300)
-    #ser = serial.Serial()
-    #temp = hit.getPanelTemp(3, ser)
-    #hit.getThresholdAndVoltageNew(3,temp,300)
-'''
+        path = '/home/retcr/deployment/panelSoftware24Season/runs/normalizationRuns/'
+        dir_list = os.listdir(path)
+        #print(dir_list)
+        fileList = []
+        for i in dir_list:
+            fileList.append(i)
+            bottom = int(i.split('_')[0])
+            top = int(i.split('_')[1])
+            #print(bottom,top)
+            if bottom<=panelTemp <=top:#in range(bottom,top):
+                print(i)
+                temp = i
+                tempRange = i
+                print(f'temp dir is {temp}')
+                break
+
+        tempDir = os.path.join(path, temp)
+        print(tempDir)
+        temp_dir_list = os.listdir(tempDir)
+        temp_dir_list.sort()
+
 
 if __name__ == "__main__":
     main()

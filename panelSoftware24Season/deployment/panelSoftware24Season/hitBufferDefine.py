@@ -642,7 +642,7 @@ def panelStartup():
         #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
         for t in range(5):
             #print("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
-            time.sleep(.4)
+            time.sleep(.5)
             outLine = cmdline("stm32flash -g 0x0 /dev/ttyUSB" + str(panel))
             #for line in outLine:
                 #print(line)
@@ -657,7 +657,7 @@ def panelStartup():
                 break
     if panelUp ==2:
         print('both panels active')
-        time.sleep(1)
+        time.sleep(2)
         return 1
 
 def powerCycle():
@@ -681,7 +681,7 @@ def powerCycle():
 
     print("low = on")
     gpio.output(pin, gpio.LOW)
-    time.sleep(1)
+    time.sleep(2)
 
 def closest(list, Number):
     aux = []
